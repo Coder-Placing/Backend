@@ -34,11 +34,13 @@ public class UserConfiguration : IEntityTypeConfiguration<Domain.User>
         builder.Property(u => u.Role)
             .HasMaxLength(50);
 
-        builder.Property(u => u.ProviderId);
-
         builder.Property(u => u.Photo)
             .HasMaxLength(250);
 
-
+        // Relación con PaymentMethods (1 User -> Many PaymentMethods)
+        builder.HasMany(u => u.PaymentMethods)
+            .WithOne(pm => pm.User)
+            .HasForeignKey(pm => pm.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

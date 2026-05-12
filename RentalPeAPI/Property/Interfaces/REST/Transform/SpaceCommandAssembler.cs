@@ -1,34 +1,39 @@
-﻿using RentalPeAPI.Property.Application.Internal.CommandServices;
+﻿using System;
+using System.Collections.Generic;
+using RentalPeAPI.Property.Application.Internal.CommandServices;
 using RentalPeAPI.Property.Interfaces.Rest.Resources;
 
-namespace RentalPeAPI.Property.Interfaces.Rest.Transform
-{
-    public static class SpaceCommandAssembler
-    {
-        public static CreateSpaceCommand ToCommand(CreateSpaceResource resource)
-            => new(
-                resource.Name,
-                resource.Description,
-                resource.PricePerHour,
-                resource.Type,
-                resource.Address,
-                resource.OwnerId,
-                resource.Services ?? new List<string>(),
-                resource.Status,    // ⚠️ status va antes que areaM2
-                resource.AreaM2
-            );
+namespace RentalPeAPI.Property.Interfaces.Rest.Transform;
 
-        public static UpdateSpaceCommand ToCommand(long id, UpdateSpaceResource resource)
-            => new(
-                id,
-                resource.Name,
-                resource.Description,
-                resource.PricePerHour,
-                resource.Type,
-                resource.Address,    // equivale a Location
-                resource.Services ?? new List<string>(),
-                resource.Status,     // ⚠️ status antes de areaM2
-                resource.AreaM2
-            );
-    }
+/// <summary>
+/// Ensamblador para convertir DTOs de entrada a Comandos de dominio.
+/// Alineado con la nueva estructura de CreateSpaceResource y UpdateSpaceResource.
+/// </summary>
+public static class SpaceCommandAssembler
+{
+    public static CreateSpaceCommand ToCommand(CreateSpaceResource resource)
+        => new(
+            homeownerId: resource.HomeownerId,
+            title: resource.Title,
+            description: resource.Description,
+            location: resource.Location,
+            spaceType: resource.SpaceType.ToString(),
+            dimensionsSquareMeters: resource.DimensionsSquareMeters,
+            estimatedBudget: resource.EstimatedBudget,
+            currency: resource.Currency,
+            hasIot: resource.HasIot,
+            images: resource.Images ?? new List<string>()
+        );
+
+    public static UpdateSpaceCommand ToCommand(long id, UpdateSpaceResource resource)
+        => new(
+            id: id,
+            title: resource.Title,
+            description: resource.Description,
+            location: resource.Location,
+            dimensionsSquareMeters: resource.DimensionsSquareMeters,
+            estimatedBudget: resource.EstimatedBudget,
+            hasIot: resource.HasIot,
+            images: resource.Images ?? new List<string>()
+        );
 }

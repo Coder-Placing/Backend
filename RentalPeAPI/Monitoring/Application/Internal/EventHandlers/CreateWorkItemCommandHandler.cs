@@ -1,13 +1,19 @@
-﻿// Monitoring/Application/Internal/CommandServices/CreateWorkItemCommandHandler.cs
-using System.Threading;
-using System.Threading.Tasks;
+﻿// Monitoring/Application/Internal/EventHandlers/CreateWorkItemCommandHandler.cs
 using MediatR;
 using RentalPeAPI.Monitoring.Domain.Entities;
 using RentalPeAPI.Monitoring.Domain.Repositories;
+using RentalPeAPI.Monitoring.Application.Internal.CommandServices;
 using RentalPeAPI.Shared.Domain.Repositories;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace RentalPeAPI.Monitoring.Application.Internal.CommandServices;
+namespace RentalPeAPI.Monitoring.Application.Internal.EventHandlers;
 
+/// <summary>
+/// Manejador del comando CreateWorkItemCommand.
+/// Crea una nueva tarea (WorkItem) y la persiste en la base de datos.
+/// </summary>
 public class CreateWorkItemCommandHandler : IRequestHandler<CreateWorkItemCommand, int>
 {
     private readonly IWorkItemRepository _workItemRepository;
@@ -25,10 +31,13 @@ public class CreateWorkItemCommandHandler : IRequestHandler<CreateWorkItemComman
     {
         // Crear el WorkItem a partir del comando
         var workItem = new WorkItem(
-            command.ProjectId,
-            command.IncidentId,
-            command.AssignedToUserId,
-            command.Description
+            command.SpaceId,
+            command.CreatedByUserId,
+            command.Title,
+            command.Description,
+            command.PhotoUrl,
+            command.PlannedStartDate,
+            command.PlannedEndDate
         );
 
         // Guardar en la BD

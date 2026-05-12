@@ -2,7 +2,9 @@
 
 public record PaymentResource(
     int Id,
-    int ProjectId,
+    long SpaceId,
+    Guid PayerUserId,
+    Guid PayeeUserId,
     int Installment,
     decimal Amount,
     DateTimeOffset Date,

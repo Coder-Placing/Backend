@@ -18,13 +18,14 @@ public class PaymentCommandService(
         }
 
         var payment = new Domain.Model.Aggregates.Payment(
-            userId:      command.UserId,
-            projectId:   command.ProjectId,
-            installment: command.Installment,
-            money:       command.Money,
-            method:      command.Method,
-            reference:   command.Reference,
-            date:        command.Date ?? DateTimeOffset.UtcNow
+            spaceId:      command.SpaceId,
+            payerUserId:  command.PayerUserId,
+            payeeUserId:  command.PayeeUserId,
+            installment:  command.Installment,
+            money:        command.Money,
+            method:       command.Method,
+            reference:    command.Reference,
+            date:         command.Date ?? DateTimeOffset.UtcNow
         );
 
         try

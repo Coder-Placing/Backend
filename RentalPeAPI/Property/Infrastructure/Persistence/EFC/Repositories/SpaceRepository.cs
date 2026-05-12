@@ -22,30 +22,17 @@ public class SpaceRepository : ISpaceRepository
     public async Task<Space?> FindByIdAsync(long id)
     {
         return await _context.Spaces
-            .Include(s => s.Services)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
-
-    public async Task<IEnumerable<Space>> ListAsync(int? ownerId = null, string? type = null)
+    public async Task<IEnumerable<Space>> ListAsync()
     {
-        var query = _context.Spaces
-            .Include(s => s.Services)
-            .AsQueryable();
-
-        if (ownerId.HasValue)
-            query = query.Where(s => s.OwnerId.Value == ownerId.Value);
-
-        if (!string.IsNullOrWhiteSpace(type))
-            query = query.Where(s => s.Type.ToString() == type);
-
-        return await query.ToListAsync();
+        return await _context.Spaces
+            .ToListAsync();
     }
 
     public void Remove(Space space)
     {
         _context.Spaces.Remove(space);
     }
-
-    
 }

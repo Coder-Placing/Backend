@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using MediatR;
 using RentalPeAPI.Monitoring.Domain.Entities;
 using RentalPeAPI.Monitoring.Domain.Repositories;
-using RentalPeAPI.Monitoring.Domain.Services;
 using RentalPeAPI.Shared.Domain.Repositories;
 
 namespace RentalPeAPI.Monitoring.Application.Internal.CommandServices;
@@ -13,16 +12,13 @@ public class IngestReadingCommandHandler : IRequestHandler<IngestReadingCommand,
 {
     private readonly IReadingRepository _readingRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IAnomalyDetectorService _anomalyDetectorService;
 
     public IngestReadingCommandHandler(
         IReadingRepository readingRepository,
-        IUnitOfWork unitOfWork,
-        IAnomalyDetectorService anomalyDetectorService)
+        IUnitOfWork unitOfWork)
     {
         _readingRepository = readingRepository;
         _unitOfWork = unitOfWork;
-        _anomalyDetectorService = anomalyDetectorService;
     }
 
     public async Task<bool> Handle(IngestReadingCommand command, CancellationToken cancellationToken)
@@ -30,7 +26,7 @@ public class IngestReadingCommandHandler : IRequestHandler<IngestReadingCommand,
         // Crear la entidad Reading a partir del comando
         var reading = new Reading(
             command.IoTDeviceId,
-            command.ProjectId,
+            command.SpaceId,
             command.MetricName,
             command.Value,
             command.Unit,
@@ -43,8 +39,6 @@ public class IngestReadingCommandHandler : IRequestHandler<IngestReadingCommand,
         // Confirmar cambios en BD
         await _unitOfWork.CompleteAsync();
 
-        // Ejecutar lógica de detección de anomalías
-        await _anomalyDetectorService.CheckAndCreateIncidentAsync(reading);
 
         // Si llegamos aquí, asumimos éxito
         return true;

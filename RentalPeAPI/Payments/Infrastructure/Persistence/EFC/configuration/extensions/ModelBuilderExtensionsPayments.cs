@@ -9,7 +9,6 @@ public static class PaymentsModelBuilderExtensions
     public static void ApplyPaymentsConfiguration(this ModelBuilder builder)
     {
         builder.Entity<Payment>(ConfigurePayment);
-        builder.Entity<Invoice>(ConfigureInvoice);
     }
 
     private static void ConfigurePayment(EntityTypeBuilder<Payment> b)
@@ -17,17 +16,19 @@ public static class PaymentsModelBuilderExtensions
         b.HasKey(p => p.Id);
         b.Property(p => p.Id).IsRequired().ValueGeneratedOnAdd();
 
-        b.Property(p => p.UserId).IsRequired();
-        b.Property(p => p.ProjectId).IsRequired();
+        b.Property(p => p.SpaceId).IsRequired();
+        b.Property(p => p.PayerUserId).IsRequired();
+        b.Property(p => p.PayeeUserId).IsRequired();
         b.Property(p => p.Installment).IsRequired();
         b.Property(p => p.Status).HasConversion<int>().IsRequired();
         b.Property(p => p.Reference).HasMaxLength(100);
         b.Property(p => p.Date).IsRequired();
 
-        b.HasIndex(p => p.UserId);
+        b.HasIndex(p => p.SpaceId);
+        b.HasIndex(p => p.PayerUserId);
+        b.HasIndex(p => p.PayeeUserId);
         b.HasIndex(p => p.Status);
-        b.HasIndex(p => p.ProjectId);
-        b.HasIndex(p => new { p.ProjectId, p.Installment });
+        b.HasIndex(p => new { p.SpaceId, p.Installment });
         b.HasIndex(p => p.Reference);
 
         b.OwnsOne(p => p.Money, m =>
@@ -47,23 +48,5 @@ public static class PaymentsModelBuilderExtensions
 
         b.Navigation(p => p.Money).IsRequired();
         b.Navigation(p => p.Method).IsRequired();
-    }
-
-    private static void ConfigureInvoice(EntityTypeBuilder<Invoice> b)
-    {
-        b.HasKey(i => i.Id);
-        b.Property(i => i.Id).IsRequired().ValueGeneratedOnAdd();
-
-        b.Property(i => i.PaymentId).IsRequired();
-        b.Property(i => i.Number).HasMaxLength(50).IsRequired();
-        b.Property(i => i.IssueDate).IsRequired();
-        b.Property(i => i.Status).HasConversion<int>().IsRequired();
-
-        b.HasIndex(i => i.PaymentId).IsUnique();
-
-        b.HasOne<Payment>()
-            .WithOne()
-            .HasForeignKey<Invoice>(i => i.PaymentId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

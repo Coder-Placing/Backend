@@ -13,6 +13,9 @@ public interface IWorkItemRepository
     // Buscar uno por su Id (PK)
     Task<WorkItem?> FindByIdAsync(int id);
 
-    // Listar todas las tareas asociadas a un proyecto
-    Task<IEnumerable<WorkItem>> ListByProjectIdAsync(int projectId);
+    // Listar todas las tareas asociadas a un espacio
+    Task<IEnumerable<WorkItem>> ListBySpaceIdAsync(long spaceId);
+
+    // Eliminar una tarea por su ID
+    Task DeleteAsync(int id);
 }

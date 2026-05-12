@@ -10,7 +10,6 @@ public class User
     public string? Phone { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public string Role { get; private set; } = "customer";
-    public Guid? ProviderId { get; private set; }
     public string? Photo { get; private set; }
 
     public List<PaymentMethod> PaymentMethods { get; private set; } = new();
@@ -18,8 +17,7 @@ public class User
     private User() { }
 
     public User(Guid id, string fullName, string email, string passwordHash,
-        string? phone = null, string role = "customer",
-        Guid? providerId = null, string? photo = null)
+        string? phone = null, string role = "customer", string? photo = null)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("El email no puede estar vacío.", nameof(email));
@@ -31,7 +29,6 @@ public class User
         Phone = phone;
         CreatedAt = DateTime.UtcNow;
         Role = string.IsNullOrWhiteSpace(role) ? "customer" : role;
-        ProviderId = providerId;
         Photo = photo;
     }
 

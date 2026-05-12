@@ -1,8 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RentalPeAPI.Property.Domain.Aggregates;
-using RentalPeAPI.Property.Domain.Aggregates.Entities;
-using RentalPeAPI.Property.Domain.Aggregates.ValueObjects;
+using RentalPeAPI.Property.Domain.Aggregates.Enums;
 
 namespace RentalPeAPI.Property.Infrastructure.Persistence.EFC.Configuration;
 
@@ -12,44 +11,74 @@ public class SpaceConfiguration : IEntityTypeConfiguration<Space>
     {
         builder.ToTable("spaces");
 
-        // 1. Clave Principal: Definición limpia de la PK
+        // Clave Principal
         builder.HasKey(s => s.Id);
-        builder.Property(s => s.Id).HasColumnName("id"); 
-        
-        builder.Property(s => s.Name).IsRequired().HasMaxLength(120);
-        builder.Property(s => s.Description).IsRequired().HasMaxLength(500);
-        builder.Property(s => s.PricePerHour).IsRequired().HasColumnType("decimal(10,2)");
-        builder.Property(s => s.Type).HasConversion<string>().IsRequired();
+        builder.Property(s => s.Id)
+            .ValueGeneratedOnAdd();
 
-        // Value Object: Location
-        builder.OwnsOne(s => s.Location, location =>
-        {
-            // [ARREGLO CRÍTICO] Mapeo a una tabla separada para evitar colisión de claves
-            location.ToTable("space_locations"); 
+        // Propiedades escalares
+        builder.Property(s => s.HomeownerId)
+            .IsRequired();
 
-            location.Property(l => l.Address)
-                .HasColumnName("address")
-                .IsRequired()
-                .HasMaxLength(255);
-        });
+        builder.Property(s => s.RemodelerId)
+            .IsRequired(false);
 
-        // Value Object: OwnerId
-        builder.OwnsOne(s => s.OwnerId, owner =>
-        {
-            // [ARREGLO CRÍTICO] Mapeo a una tabla separada
-            owner.ToTable("space_owners"); 
-            
-            owner.Property(o => o.Value)
-                .HasColumnName("owner_id") 
-                .IsRequired();
-        });
+        builder.Property(s => s.Title)
+            .IsRequired()
+            .HasMaxLength(200);
 
-        // 4. Relación con Services
-        builder.HasMany(s => s.Services)
-            .WithOne(sv => sv.Space)          // relación con la navegación
-            .HasForeignKey(sv => sv.SpaceId)  // 👈 usa la propiedad, no el string
-            .HasConstraintName("fk_spaces_services_space_id")
-            .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(s => s.Description)
+            .IsRequired()
+            .HasMaxLength(2000);
 
+        builder.Property(s => s.Location)
+            .IsRequired()
+            .HasMaxLength(500);
+
+        builder.Property(s => s.SpaceType)
+            .HasConversion<string>()
+            .IsRequired();
+
+        builder.Property(s => s.DimensionsSquareMeters)
+            .IsRequired()
+            .HasColumnType("decimal(10, 2)");
+
+        builder.Property(s => s.EstimatedBudget)
+            .IsRequired()
+            .HasColumnType("decimal(18, 2)");
+
+        builder.Property(s => s.Currency)
+            .IsRequired()
+            .HasMaxLength(3)
+            .HasDefaultValue("PEN");
+
+        builder.Property(s => s.Status)
+            .HasConversion<int>()
+            .IsRequired()
+            .HasDefaultValue(SpaceStatus.Published);
+
+        builder.Property(s => s.HasIot)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        // Imágenes como JSON collection
+        builder.Property(s => s.Images)
+            .HasConversion(
+                v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null),
+                v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions)null) ?? new List<string>()
+            )
+            .IsRequired();
+
+        builder.Property(s => s.PublishedAt)
+            .IsRequired();
+
+        builder.Property(s => s.AcceptedAt)
+            .IsRequired(false);
+
+        // Índices para optimizar consultas
+        builder.HasIndex(s => s.HomeownerId);
+        builder.HasIndex(s => s.RemodelerId);
+        builder.HasIndex(s => s.Status);
+        builder.HasIndex(s => new { s.HomeownerId, s.Status });
     }
 }

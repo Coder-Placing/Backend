@@ -3,8 +3,9 @@
 namespace RentalPeAPI.Payments.Domain.Model.Commands.payments;
 
 public sealed record CreatePaymentCommand(
-    int UserId,
-    int ProjectId,
+    long SpaceId,
+    Guid PayerUserId,
+    Guid PayeeUserId,
     int Installment,
     Money Money,
     PaymentMethodSummary Method,

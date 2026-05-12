@@ -23,8 +23,8 @@ public class ReadingConfiguration : IEntityTypeConfiguration<Reading>
             .IsRequired();
 
         // FK a Project (del dbjson: "projectId")
-        builder.Property(r => r.ProjectId)
-            .HasColumnName("project_id")
+        builder.Property(r => r.SpaceId)
+            .HasColumnName("space_id")
             .IsRequired();
 
         // Propiedades
@@ -49,7 +49,7 @@ public class ReadingConfiguration : IEntityTypeConfiguration<Reading>
 
         // Índices útiles para consultas
         builder.HasIndex(r => r.IoTDeviceId);
-        builder.HasIndex(r => r.ProjectId);
+        builder.HasIndex(r => r.SpaceId);
         builder.HasIndex(r => r.Timestamp);
     }
 }

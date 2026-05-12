@@ -3,28 +3,32 @@
     public class UpdateSpaceCommand
     {
         public long Id { get; }
-
-        public string Name { get; }
+        public string Title { get; }
         public string Description { get; }
-        public decimal PricePerHour { get; }
-        public string Type { get; }
         public string Location { get; }
-        public string Status { get; set; }
-        public decimal AreaM2 { get; set; }
-        public IEnumerable<string> Services { get; }
-        
+        public decimal DimensionsSquareMeters { get; }
+        public decimal EstimatedBudget { get; }
+        public bool HasIot { get; }
+        public List<string>? Images { get; }
 
-        public UpdateSpaceCommand(long id, string name, string description, decimal pricePerHour, string type, string location, IEnumerable<string> services, string status, decimal areaM2)
+        public UpdateSpaceCommand(
+            long id,
+            string title,
+            string description,
+            string location,
+            decimal dimensionsSquareMeters,
+            decimal estimatedBudget,
+            bool hasIot,
+            List<string>? images = null)
         {
             Id = id;
-            Name = name;
+            Title = title;
             Description = description;
-            PricePerHour = pricePerHour;
-            Type = type;
             Location = location;
-            Services = services;
-            Status = status;
-            AreaM2 = areaM2;
+            DimensionsSquareMeters = dimensionsSquareMeters;
+            EstimatedBudget = estimatedBudget;
+            HasIot = hasIot;
+            Images = images;
         }
     }
 }

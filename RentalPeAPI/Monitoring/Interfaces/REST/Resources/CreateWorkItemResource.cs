@@ -1,33 +1,62 @@
 ﻿// Monitoring/Interfaces/REST/Resources/CreateWorkItemResource.cs
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace RentalPeAPI.Monitoring.Interfaces.REST.Resources;
 
+/// <summary>
+/// DTO para la creación de una tarea (WorkItem) vinculada a un espacio (Space).
+/// 
+/// Regla de Negocio: 
+/// - Puede ser creada por el dueño del espacio (Homeowner) o por un remodelador (Remodeler).
+/// - El estado inicial se asigna automáticamente según el rol:
+///   • Homeowner: Status = "PENDING", las fechas planificadas son ignoradas
+///   • Remodeler: Acepta Status y fechas del payload
+/// 
+/// Por seguridad, el CreatedByUserId se extrae del JWT, no del cliente.
+/// </summary>
 public class CreateWorkItemResource
 {
-    [Required]
-    [JsonPropertyName("projectId")]
-    public int ProjectId { get; init; }          // -> "projectId"
+    [Required(ErrorMessage = "SpaceId es requerido")]
+    [JsonPropertyName("spaceId")]
+    public long SpaceId { get; set; }
 
-    [JsonPropertyName("incidentId")]
-    public int? IncidentId { get; init; }        // -> "incidentId" (puede ser null si no hay incidente)
+    [Required(ErrorMessage = "Title es requerido")]
+    [StringLength(200, MinimumLength = 1, ErrorMessage = "Title debe tener entre 1 y 200 caracteres")]
+    [JsonPropertyName("title")]
+    public string Title { get; set; } = default!;
 
-    [Required]
-    [JsonPropertyName("assignedToUserId")]
-    public int AssignedToUserId { get; init; }   // -> "assignedToUserId"
-
-    [Required]
+    [Required(ErrorMessage = "Description es requerido")]
+    [StringLength(500, MinimumLength = 1, ErrorMessage = "Description debe tener entre 1 y 500 caracteres")]
     [JsonPropertyName("description")]
-    public string Description { get; init; } = default!; // -> "description"
+    public string Description { get; set; } = default!;
+
+    [StringLength(2048, ErrorMessage = "PhotoUrl no puede exceder 2048 caracteres")]
+    [JsonPropertyName("photoUrl")]
+    public string? PhotoUrl { get; set; } // Opcional
+
+    [JsonPropertyName("plannedStartDate")]
+    public DateTime? PlannedStartDate { get; set; } // Opcional - ignorado si Homeowner
+
+    [JsonPropertyName("plannedEndDate")]
+    public DateTime? PlannedEndDate { get; set; } // Opcional - ignorado si Homeowner
 
     public CreateWorkItemResource() { }
 
-    public CreateWorkItemResource(int projectId, int? incidentId, int assignedToUserId, string description)
+    public CreateWorkItemResource(
+        long spaceId,
+        string title,
+        string description,
+        string? photoUrl = null,
+        DateTime? plannedStartDate = null,
+        DateTime? plannedEndDate = null)
     {
-        ProjectId = projectId;
-        IncidentId = incidentId;
-        AssignedToUserId = assignedToUserId;
+        SpaceId = spaceId;
+        Title = title;
         Description = description;
+        PhotoUrl = photoUrl;
+        PlannedStartDate = plannedStartDate;
+        PlannedEndDate = plannedEndDate;
     }
 }

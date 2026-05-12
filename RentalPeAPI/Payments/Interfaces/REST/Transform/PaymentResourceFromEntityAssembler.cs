@@ -13,7 +13,9 @@ public static class PaymentResourceFromEntityAssembler
 
         return new PaymentResource(
             entity.Id,
-            entity.ProjectId,
+            entity.SpaceId,
+            entity.PayerUserId,
+            entity.PayeeUserId,
             entity.Installment,
             entity.Money.Amount,
             entity.Date,

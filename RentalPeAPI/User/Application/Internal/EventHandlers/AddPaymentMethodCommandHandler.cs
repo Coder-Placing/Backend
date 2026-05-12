@@ -65,7 +65,6 @@ public class AddPaymentMethodCommandHandler
             updatedUser.Phone,
             updatedUser.CreatedAt,
             updatedUser.Role,
-            updatedUser.ProviderId,
             updatedUser.Photo,
             paymentMethodsDto
         );

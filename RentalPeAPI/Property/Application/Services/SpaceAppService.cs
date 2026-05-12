@@ -2,66 +2,87 @@
 using RentalPeAPI.Property.Application.Internal.Dtos;
 using RentalPeAPI.Property.Application.Internal.QueryServices;
 using RentalPeAPI.Property.Domain.Aggregates;
+using RentalPeAPI.Property.Domain.Aggregates.Enums;
 using RentalPeAPI.Property.Domain.Repositories;
-using RentalPeAPI.Shared.Domain.Repositories; // <-- ¡Asegúrate de tener este using!
+using RentalPeAPI.Shared.Domain.Repositories;
 
 namespace RentalPeAPI.Property.Application.Services;
 
 public class SpaceAppService
 {
     private readonly ISpaceRepository _spaceRepository;
-    private readonly IUnitOfWork _unitOfWork; // <-- 1. Añade el Unit of Work
+    private readonly IUnitOfWork _unitOfWork;
 
-    // 2. Inyecta el IUnitOfWork en el constructor
     public SpaceAppService(ISpaceRepository spaceRepository, IUnitOfWork unitOfWork)
     {
         _spaceRepository = spaceRepository;
-        _unitOfWork = unitOfWork; 
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<SpaceDto> CreateSpaceAsync(CreateSpaceCommand command)
     {
         var space = new Space(
-            command.Name,
+            command.HomeownerId,
+            command.Title,
             command.Description,
-            command.PricePerHour,
-            command.Type,
             command.Location,
-            command.OwnerId,
-            command.Services,
-            command.AreaM2,
-            command.Status
+            Enum.TryParse<SpaceType>(command.SpaceType, true, out var spaceType) ? spaceType : SpaceType.Other,
+            command.DimensionsSquareMeters,
+            command.EstimatedBudget,
+            command.Currency,
+            command.HasIot,
+            command.Images
         );
 
         await _spaceRepository.AddAsync(space);
-        
-        // --- ¡ARREGLO! Usa el Unit of Work ---
-        await _unitOfWork.CompleteAsync(); 
+        await _unitOfWork.CompleteAsync();
 
         return ToDto(space);
     }
-
 
     public async Task<SpaceDto?> UpdateSpaceAsync(UpdateSpaceCommand command)
     {
         var space = await _spaceRepository.FindByIdAsync(command.Id);
         if (space == null) return null;
 
-        space.Update(
-            command.Name,
+        space.UpdateDetails(
+            command.Title,
             command.Description,
-            command.PricePerHour,
-            command.Type,
             command.Location,
-            command.Services,
-            command.AreaM2,
-            command.Status
+            command.DimensionsSquareMeters,
+            command.EstimatedBudget,
+            command.HasIot
         );
 
-        // --- ¡ARREGLO! Usa el Unit of Work ---
-        await _unitOfWork.CompleteAsync(); 
+        if (command.Images != null && command.Images.Any())
+        {
+            space.UpdateImages(command.Images);
+        }
+
+        await _unitOfWork.CompleteAsync();
 
         return ToDto(space);
+    }
+
+    public async Task<SpaceDto?> AcceptProjectAsync(AcceptSpaceCommand command)
+    {
+        var space = await _spaceRepository.FindByIdAsync(command.SpaceId);
+        if (space == null) return null;
+
+        space.AcceptProject(command.RemodelerId);
+        await _unitOfWork.CompleteAsync();
+
+        return ToDto(space);
+    }
+
+    /// <summary>
+    /// Método heredado para compatibilidad. Usa AcceptProjectAsync internamente.
+    /// </summary>
+    [Obsolete("Use AcceptProjectAsync instead.")]
+    public async Task<SpaceDto?> AcceptOfferAsync(long spaceId, Guid remodelerId)
+    {
+        var command = new AcceptSpaceCommand(spaceId, remodelerId);
+        return await AcceptProjectAsync(command);
     }
 
     public async Task<bool> DeleteSpaceAsync(DeleteSpaceCommand command)
@@ -70,13 +91,9 @@ public class SpaceAppService
         if (space == null) return false;
 
         _spaceRepository.Remove(space);
-        
-        // --- ¡ARREGLO! Usa el Unit of Work ---
-        await _unitOfWork.CompleteAsync(); 
+        await _unitOfWork.CompleteAsync();
         return true;
     }
-
-    // --- Los métodos GET no cambian (no guardan nada) ---
 
     public async Task<SpaceDto?> GetSpaceByIdAsync(GetSpaceByIdQuery query)
     {
@@ -86,7 +103,7 @@ public class SpaceAppService
 
     public async Task<IEnumerable<SpaceDto>> ListSpacesAsync(ListSpacesQuery query)
     {
-        var spaces = await _spaceRepository.ListAsync(query.OwnerId, query.Type);
+        var spaces = await _spaceRepository.ListAsync();
         return spaces.Select(ToDto).ToList();
     }
 
@@ -95,20 +112,20 @@ public class SpaceAppService
         return new SpaceDto
         {
             Id = space.Id,
-            Name = space.Name,
+            Title = space.Title,
             Description = space.Description,
-            PricePerHour = space.PricePerHour,
-            Type = space.Type.ToString(), 
-            Location = space.Location?.Address ?? string.Empty, 
-            OwnerId = space.OwnerId.Value, 
-            Services = space.Services.Select(s => new ServiceDto
-            {
-                Id = s.Id,
-                Name = s.Name
-            }).ToList(),
-            Status = space.Status,
-            AreaM2 = space.AreaM2,
-            CreatedAt = space.CreatedAt
+            Location = space.Location,
+            HomeownerId = space.HomeownerId,
+            RemodelerId = space.RemodelerId,
+            SpaceType = space.SpaceType.ToString(),
+            DimensionsSquareMeters = space.DimensionsSquareMeters,
+            EstimatedBudget = space.EstimatedBudget,
+            Currency = space.Currency,
+            Status = space.Status.ToString(),
+            HasIot = space.HasIot,
+            Images = space.Images,
+            PublishedAt = space.PublishedAt,
+            AcceptedAt = space.AcceptedAt
         };
     }
 }

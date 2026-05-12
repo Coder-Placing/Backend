@@ -24,10 +24,10 @@ public class IoTDeviceRepository : IIoTDeviceRepository
         return await _context.IoTDevices.FindAsync(id);
     }
 
-    public async Task<IEnumerable<IoTDevice>> ListByProjectIdAsync(long projectId)
+    public async Task<IEnumerable<IoTDevice>> ListBySpaceIdAsync(long spaceId)
     {
         return await _context.IoTDevices
-            .Where(d => d.ProjectId == projectId)
+            .Where(d => d.SpaceId == spaceId)
             .ToListAsync();
     }
 }

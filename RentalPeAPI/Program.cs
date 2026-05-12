@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using MediatR;
+using System.Text;
 
 // Shared
 using RentalPeAPI.Shared.Infrastructure.Persistence.EFC.Configuration;           // AppDbContext
@@ -9,22 +12,6 @@ using RentalPeAPI.Shared.Infrastructure.Interfaces.ASP.Configuration;           
 using IUnitOfWork = RentalPeAPI.Shared.Domain.Repositories.IUnitOfWork;
 using UnitOfWork = RentalPeAPI.Shared.Infrastructure.Persistence.EFC.Repositories.UnitOfWork;
 
-// Monitoring ACL
-using RentalPeAPI.Monitoring.Application.ACL;
-
-// Combo BC
-using RentalPeAPI.Combo.Application.Internal.CommandServices;
-using RentalPeAPI.Combo.Application.Internal.QueryServices;
-using RentalPeAPI.Combo.Domain.Repositories;
-using RentalPeAPI.Combo.Infrastructure.Persistence.EFC.Repositories;
-
-// Payment BC
-using RentalPeAPI.Payments.Domain.Repositories;
-using RentalPeAPI.Payments.Domain.Services;
-using RentalPeAPI.Payments.Application.Internal.CommandServices;
-using RentalPeAPI.Payments.Application.Internal.QueryServices;
-using RentalPeAPI.Payments.Infrastructure.Persistence.EFC.Repositories;
-
 // User BC
 using RentalPeAPI.User.Application.Internal.CommandServices;
 using RentalPeAPI.User.Domain.Repositories;
@@ -32,39 +19,22 @@ using RentalPeAPI.User.Domain.Services;
 using RentalPeAPI.User.Infrastructure.Persistence.EFC.Repositories;
 using RentalPeAPI.User.Infrastructure.Security;
 
+// Payment BC
+using RentalPeAPI.Payments.Domain.Repositories;
+using RentalPeAPI.Payments.Domain.Services.payment;
+using RentalPeAPI.Payments.Application.Internal.CommandServices;
+using RentalPeAPI.Payments.Application.Internal.QueryServices;
+using RentalPeAPI.Payments.Infrastructure.Persistence.EFC.Repositories;
+
 // Property/Space BC
 using RentalPeAPI.Property.Application.Services;
 using RentalPeAPI.Property.Domain.Repositories;
 using RentalPeAPI.Property.Infrastructure.Persistence.EFC.Repositories;
 
-// Profiles BC
-using RentalPeAPI.Profiles.Application.Internal.CommandServices;
-using RentalPeAPI.Profiles.Application.Internal.QueryServices;
-using RentalPeAPI.Profiles.Domain.Repositories;
-using RentalPeAPI.Profiles.Domain.Services;
-using RentalPeAPI.Profiles.Infrastructure.Persistence.EFC.Repositories;
-
 // Monitoring BC
+using RentalPeAPI.Monitoring.Application.ACL;
 using RentalPeAPI.Monitoring.Domain.Repositories;
 using RentalPeAPI.Monitoring.Infrastructure.Persistence.EFC.Repositories;
-using RentalPeAPI.Monitoring.Infrastructure.Services;
-using RentalPeAPI.Monitoring.Domain.Services;
-using RentalPeAPI.Payments.Domain.Services.invoice;
-using RentalPeAPI.Payments.Domain.Services.payment;
-using RentalPeAPI.subscriptions.Application.ACL;
-using RentalPeAPI.subscriptions.Application.Internal.CommandServices;
-using RentalPeAPI.subscriptions.Application.Internal.QueryServices;
-using RentalPeAPI.subscriptions.Domain.Repositories;
-using RentalPeAPI.subscriptions.Domain.Services;
-using RentalPeAPI.subscriptions.Infrastructure.Persistence.EFC.Repositories;
-using RentalPeAPI.subscriptions.Interfaces.ACL;
-
-// Providers BC
-using RentalPeAPI.Providers.Application.ACL;
-using RentalPeAPI.Providers.Application.Internal.CommandServices;
-using RentalPeAPI.providers.Domain.Repositories;
-using RentalPeAPI.providers.Domain.Services;
-using RentalPeAPI.providers.Infrastructure.Persistence.EFC.Repositories;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,6 +43,36 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddLocalization();
 builder.Services.AddControllers(o => o.Conventions.Add(new KebabCaseRouteNamingConvention()))
     .AddDataAnnotationsLocalization();
+
+// ==== CONFIGURACIÓN DE AUTENTICACIÓN JWT ====
+var jwtKey = builder.Configuration["JwtSettings:Secret"] ?? "your-secret-key-minimum-32-characters-long";
+var jwtIssuer = builder.Configuration["JwtSettings:Issuer"] ?? "RentalPeAPI";
+var jwtAudience = builder.Configuration["JwtSettings:Audience"] ?? "RentalPeFrontend";
+
+var key = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero,
+        RoleClaimType = System.Security.Claims.ClaimTypes.Role 
+    };
+});
+
+builder.Services.AddAuthorization();
 
 // Swagger (solo Swashbuckle)
 builder.Services.AddEndpointsApiExplorer();
@@ -84,6 +84,34 @@ builder.Services.AddSwaggerGen(c =>
             .Replace("RentalPeAPI.", string.Empty)
             .Replace("+", ".")
             .Replace(".", "_"));
+
+    // ==== CONFIGURACIÓN DE SEGURIDAD JWT EN SWAGGER ====
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. " +
+                      "Enter 'Bearer' [space] and then your token in the text input below. " +
+                      "Example: 'Bearer eyJhbGciOiJIUzI1NiIs...'",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
 });
 
 // Monitoring ACL
@@ -132,60 +160,29 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommand).Assembly);   // User
-    cfg.RegisterServicesFromAssembly(typeof(ComboCommandService).Assembly);   // Combo
     cfg.RegisterServicesFromAssembly(typeof(PaymentCommandService).Assembly); // Payment
-    cfg.RegisterServicesFromAssembly(typeof(ProfileCommandService).Assembly); // Profiles
 });
 
 // User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
-builder.Services.AddSingleton<ITokenGenerationService,   TokenGenerationService>();
+builder.Services.AddSingleton<ITokenGenerationService, TokenGenerationService>();
 builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
 
-// Combo
-builder.Services.AddScoped<IComboRepository, ComboRepository>();
-builder.Services.AddScoped<ComboCommandService>();
-builder.Services.AddScoped<ComboQueryService>();
-
 // Payment
-builder.Services.AddScoped<IPaymentRepository,      PaymentRepository>();
-builder.Services.AddScoped<IInvoiceRepository,      InvoiceRepository>();
-builder.Services.AddScoped<IPaymentCommandService,  PaymentCommandService>();
-builder.Services.AddScoped<IPaymentQueryService,    PaymentQueryService>();
-builder.Services.AddScoped<IInvoiceCommandService,  InvoiceCommandService>();
-builder.Services.AddScoped<IInvoiceQueryService,    InvoiceQueryService>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentCommandService, PaymentCommandService>();
+builder.Services.AddScoped<IPaymentQueryService, PaymentQueryService>();
 
 // Property/Space
 builder.Services.AddScoped<SpaceAppService>();
 builder.Services.AddScoped<ISpaceRepository, SpaceRepository>();
 
-// Profile
-builder.Services.AddScoped<IProfileRepository,       ProfileRepository>();
-builder.Services.AddScoped<IProfileCommandService,       ProfileCommandService>();
-builder.Services.AddScoped<IProfileQueryService,         ProfileQueryService>();
-
-// --- Subscriptions BC ---
-builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
-builder.Services.AddScoped<ISubscriptionCommandService, SubscriptionCommandService>();
-builder.Services.AddScoped<ISubscriptionQueryService,   SubscriptionQueryService>();
-builder.Services.AddScoped<ISubscriptionsContextFacade, SubscriptionsContextFacade>();
-
 // Monitoring
-builder.Services.AddScoped<IReadingRepository,      ReadingRepository>();
-builder.Services.AddScoped<IWorkItemRepository,     WorkItemRepository>();
-builder.Services.AddScoped<IIncidentRepository,     IncidentRepository>();
-builder.Services.AddScoped<IProjectRepository,      ProjectRepository>();
-builder.Services.AddScoped<IIoTDeviceRepository,    IoTDeviceRepository>();
+builder.Services.AddScoped<IReadingRepository, ReadingRepository>();
+builder.Services.AddScoped<IWorkItemRepository, WorkItemRepository>();
+builder.Services.AddScoped<IIoTDeviceRepository, IoTDeviceRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<IAnomalyDetectorService, AnomalyDetectorService>();
-builder.Services.AddScoped<INotificationService,    NotificationService>();
-
-// Providers
-builder.Services.AddScoped<IProviderRepository, ProviderRepository>();
-builder.Services.AddScoped<IProviderCommandService, ProviderCommandService>();
-builder.Services.AddScoped<IProviderQueryService, ProviderQueryService>();
-builder.Services.AddScoped<ProvidersContextFacade>();
 
 // Kestrel: solo HTTP para evitar warning de certificado y mixed content
 //builder.WebHost.ConfigureKestrel(o => o.ListenLocalhost(52888));
@@ -222,9 +219,14 @@ app.MapGet("/", context =>
     context.Response.Redirect("/swagger", permanent: true);
     return Task.CompletedTask;
 });
+
 // Pipeline
 // app.UseHttpsRedirection(); // deshabilitado: solo HTTP
+
+// ==== AUTENTICACIÓN Y AUTORIZACIÓN ====
+app.UseAuthentication();  // DEBE ir antes de UseAuthorization
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();

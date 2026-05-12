@@ -1,6 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentalPeAPI.Monitoring.Application.Internal.CommandServices;
 using RentalPeAPI.Monitoring.Application.Internal.QueryServices;
@@ -8,8 +11,12 @@ using RentalPeAPI.Monitoring.Interfaces.REST.Resources;
 
 namespace RentalPeAPI.Monitoring.Interfaces.REST.Controllers;
 
+/// <summary>
+/// Controlador para dispositivos IoT vinculados a espacios (Spaces).
+/// </summary>
 [ApiController]
 [Route("api/v1/monitoring/[controller]")]
+[Authorize] // ← CRÍTICO: Requiere autenticación JWT
 public class IoTDevicesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -19,11 +26,21 @@ public class IoTDevicesController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Crea un nuevo dispositivo IoT para un espacio específico.
+    /// Solo accesible para usuarios autenticados (ambos roles).
+    /// </summary>
     [HttpPost]
+    [Authorize(Roles = "Homeowner,Remodeler")]
     public async Task<IActionResult> CreateDevice([FromBody] CreateIoTDeviceResource resource)
     {
+        // Validar que el usuario autenticado tenga un NameIdentifier válido
+        var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim))
+            return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
+
         var command = new CreateIoTDeviceCommand(
-            resource.ProjectId,
+            resource.SpaceId,
             resource.Type,
             resource.Name,
             resource.SerialNumber
@@ -33,28 +50,38 @@ public class IoTDevicesController : ControllerBase
 
         var deviceResource = new IoTDeviceResource(
             device.Id,
-            device.ProjectId,
+            device.SpaceId,
             device.Type,
             device.Status,
             device.InstalledAt
         );
 
         return CreatedAtAction(
-            nameof(ListDevicesByProject),
-            new { projectId = device.ProjectId },
+            nameof(ListDevicesBySpace),
+            new { spaceId = device.SpaceId },
             deviceResource
         );
     }
 
-    [HttpGet("project/{projectId:long}")]
-    public async Task<IActionResult> ListDevicesByProject(long projectId)
+    /// <summary>
+    /// Lista todos los dispositivos IoT de un espacio específico.
+    /// Solo accesible para usuarios autenticados (ambos roles).
+    /// </summary>
+    [HttpGet("space/{spaceId:long}")]
+    [Authorize(Roles = "Homeowner,Remodeler")]
+    public async Task<IActionResult> ListDevicesBySpace(long spaceId)
     {
-        var query = new ListIoTDevicesByProjectQuery(projectId);
+        // Validar que el usuario autenticado tenga un NameIdentifier válido
+        var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim))
+            return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
+
+        var query = new ListIoTDevicesBySpaceQuery(spaceId);
         var devices = await _mediator.Send(query);
 
         var resources = devices.Select(d => new IoTDeviceResource(
             d.Id,
-            d.ProjectId,
+            d.SpaceId,
             d.Type,
             d.Status,
             d.InstalledAt

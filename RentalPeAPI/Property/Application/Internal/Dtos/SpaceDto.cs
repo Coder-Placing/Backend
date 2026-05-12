@@ -5,36 +5,18 @@ namespace RentalPeAPI.Property.Application.Internal.Dtos;
 public class SpaceDto
 {
     public long Id { get; set; }
-    public string Name { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public decimal PricePerHour { get; set; }
-    public string Type { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
-    public long OwnerId { get; set; }
-    public List<ServiceDto> Services { get; set; } = new();
-    public string Status { get; set; } = "available";
-    public decimal AreaM2 { get; set; }
-    public DateTime CreatedAt { get; set; }
-
-    public static SpaceDto FromDomain(Space space)
-    {
-        return new SpaceDto
-        {
-            Id = space.Id,
-            Name = space.Name,
-            Description = space.Description,
-            PricePerHour = space.PricePerHour,
-            Type = space.Type.ToString(),
-            Location = space.Location.ToString(), // si tu Location tiene un override de ToString(), o usa space.Location.Address
-            OwnerId = space.OwnerId.Value,
-            Status = space.Status,
-            AreaM2 = space.AreaM2,
-            CreatedAt = space.CreatedAt,
-            Services = space.Services.Select(s => new ServiceDto
-            {
-                Id = s.Id,
-                Name = s.Name
-            }).ToList()
-        };
-    }
+    public Guid HomeownerId { get; set; }
+    public Guid? RemodelerId { get; set; }
+    public string SpaceType { get; set; } = string.Empty;
+    public decimal DimensionsSquareMeters { get; set; }
+    public decimal EstimatedBudget { get; set; }
+    public string Currency { get; set; } = "PEN";
+    public string Status { get; set; } = "Published";
+    public bool HasIot { get; set; }
+    public List<string> Images { get; set; } = new();
+    public DateTimeOffset PublishedAt { get; set; }
+    public DateTimeOffset? AcceptedAt { get; set; }
 }

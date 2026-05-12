@@ -2,10 +2,13 @@
 
 namespace RentalPeAPI.Monitoring.Domain.Model.Aggregates;
 
+/// <summary>
+/// Dispositivo IoT vinculado a un espacio (Space). Mantiene desacoplamiento estricto por ID.
+/// </summary>
 public class IoTDevice
 {
     public long Id { get; private set; }
-    public long ProjectId { get; private set; }
+    public long SpaceId { get; private set; }
 
     public string Name { get; private set; } = string.Empty;      // columna NOT NULL en MySQL
     public string SerialNumber { get; private set; } = string.Empty;
@@ -17,12 +20,12 @@ public class IoTDevice
     // EF
     private IoTDevice() { }
 
-    public IoTDevice(long projectId, string type, string? name, string? serialNumber)
+    public IoTDevice(long spaceId, string type, string? name, string? serialNumber)
     {
-        if (projectId <= 0) throw new ArgumentException("ProjectId debe ser > 0", nameof(projectId));
+        if (spaceId <= 0) throw new ArgumentException("SpaceId debe ser > 0", nameof(spaceId));
         if (string.IsNullOrWhiteSpace(type)) throw new ArgumentException("Type es obligatorio", nameof(type));
 
-        ProjectId = projectId;
+        SpaceId = spaceId;
         Type = type;
         Name = string.IsNullOrWhiteSpace(name) ? type : name;   // si no mandas name, usamos type
         SerialNumber = serialNumber ?? string.Empty;

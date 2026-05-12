@@ -47,7 +47,6 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, U
             hashedPassword,
             command.Phone,
             command.Role,
-            command.ProviderId,
             command.Photo
         );
 
@@ -65,7 +64,6 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, U
             user.Phone,
             user.CreatedAt,
             user.Role,
-            user.ProviderId,
             user.Photo,
             paymentMethodsDto
         );

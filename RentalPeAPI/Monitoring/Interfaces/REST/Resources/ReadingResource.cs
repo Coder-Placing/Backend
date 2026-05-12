@@ -5,8 +5,8 @@ namespace RentalPeAPI.Monitoring.Interfaces.REST.Resources;
 
 public record ReadingResource(
     long Id,
-    int IoTDeviceId,
-    int ProjectId,
+    long IoTDeviceId,
+    long SpaceId,
     string MetricName,
     decimal Value,
     string Unit,

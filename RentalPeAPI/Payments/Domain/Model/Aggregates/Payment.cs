@@ -7,12 +7,16 @@ public partial class Payment
 {
     public int Id { get; }
 
-    public int UserId { get; private set; }
+    // Referencia al espacio (Space)
+    public long SpaceId { get; private set; }
 
-    // Nuevo: viene de Monitoring (proyecto)
-    public int ProjectId { get; private set; }
+    // Usuario que paga (Remodeler)
+    public Guid PayerUserId { get; private set; }
 
-    // Nuevo: número de cuota
+    // Usuario que recibe (Homeowner)
+    public Guid PayeeUserId { get; private set; }
+
+    // Número de cuota/parte
     public int Installment { get; private set; }
 
     public Money Money { get; private set; } = null!;
@@ -23,7 +27,7 @@ public partial class Payment
 
     public string? Reference { get; private set; }
 
-    // Nuevo: fecha lógica del pago (para el JSON `date`)
+    // Fecha lógica del pago
     public DateTimeOffset Date { get; private set; }
 
     protected Payment()
@@ -33,21 +37,25 @@ public partial class Payment
     }
 
     public Payment(
-        int userId,
-        int projectId,
+        long spaceId,
+        Guid payerUserId,
+        Guid payeeUserId,
         int installment,
         Money money,
         PaymentMethodSummary method,
         string? reference = null,
         DateTimeOffset? date = null)
     {
-        if (projectId <= 0) throw new ArgumentOutOfRangeException(nameof(projectId));
+        if (spaceId <= 0) throw new ArgumentOutOfRangeException(nameof(spaceId));
+        if (payerUserId == Guid.Empty) throw new ArgumentException("Payer user ID cannot be empty", nameof(payerUserId));
+        if (payeeUserId == Guid.Empty) throw new ArgumentException("Payee user ID cannot be empty", nameof(payeeUserId));
         if (installment <= 0) throw new ArgumentOutOfRangeException(nameof(installment));
         if (money is null) throw new ArgumentNullException(nameof(money));
         if (method is null) throw new ArgumentNullException(nameof(method));
 
-        UserId = userId;
-        ProjectId = projectId;
+        SpaceId = spaceId;
+        PayerUserId = payerUserId;
+        PayeeUserId = payeeUserId;
         Installment = installment;
         Money = money;
         Method = method;
@@ -92,9 +100,9 @@ public partial class Payment
         Installment = installment;
     }
 
-    public void ChangeProject(int projectId)
+    public void ChangeSpace(long spaceId)
     {
-        if (projectId <= 0) throw new ArgumentOutOfRangeException(nameof(projectId));
-        ProjectId = projectId;
+        if (spaceId <= 0) throw new ArgumentOutOfRangeException(nameof(spaceId));
+        SpaceId = spaceId;
     }
 }

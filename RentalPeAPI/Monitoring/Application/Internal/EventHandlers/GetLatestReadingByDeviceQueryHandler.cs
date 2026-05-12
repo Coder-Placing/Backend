@@ -26,7 +26,7 @@ public class GetLatestReadingByDeviceQueryHandler
         return new ReadingResource(
             reading.Id,
             reading.IoTDeviceId,
-            reading.ProjectId,
+            reading.SpaceId,
             reading.MetricName,
             reading.Value,
             reading.Unit,

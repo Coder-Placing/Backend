@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 
 namespace RentalPeAPI.Monitoring.Domain.Entities;
 
@@ -8,8 +7,8 @@ public class Reading
     public long Id { get; set; } 
     
     
-    public int IoTDeviceId { get; set; } 
-    public int ProjectId { get; set; }
+    public long IoTDeviceId { get; set; } 
+    public long SpaceId { get; set; }
     
     public string MetricName { get; set; } = string.Empty; 
     public decimal Value { get; set; }
@@ -18,9 +17,9 @@ public class Reading
 
     public Reading() { }
 
-    public Reading(int ioTDeviceId, int projectId, string metricName, decimal value, string unit, DateTime timestamp)
+    public Reading(long ioTDeviceId, long spaceId, string metricName, decimal value, string unit, DateTime timestamp)
     {
-        ProjectId = projectId;
+        SpaceId = spaceId;
         IoTDeviceId = ioTDeviceId;
         MetricName = metricName;
         Value = value;

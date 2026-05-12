@@ -28,8 +28,9 @@ public class PaymentsContextFacade(
         var method = new PaymentMethodSummary(methodType, methodLabel, methodLast4);
 
         var command = new CreatePaymentCommand(
-            UserId: userId,
-            ProjectId: projectId,
+            SpaceId: projectId,
+            PayerUserId: (Guid)(object)userId,
+            PayeeUserId: (Guid)(object)userId,
             Installment: installment,
             Money: money,
             Method: method,

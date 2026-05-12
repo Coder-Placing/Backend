@@ -7,7 +7,7 @@ public interface ISpaceRepository
     Task AddAsync(Space space);
     Task<Space?> FindByIdAsync(long id);
 
-    Task<IEnumerable<Space>> ListAsync(int? ownerId = null, string? type = null);
+    Task<IEnumerable<Space>> ListAsync();
     void Remove(Space space);
   
 }

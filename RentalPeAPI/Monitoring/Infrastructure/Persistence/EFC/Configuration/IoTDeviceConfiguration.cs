@@ -15,8 +15,8 @@ public class IoTDeviceConfiguration : IEntityTypeConfiguration<IoTDevice>
             .HasColumnName("id")
             .IsRequired();
 
-        builder.Property(d => d.ProjectId)
-            .HasColumnName("project_id")
+        builder.Property(d => d.SpaceId)
+            .HasColumnName("space_id")
             .IsRequired();
 
         builder.Property(d => d.Name)
@@ -42,6 +42,6 @@ public class IoTDeviceConfiguration : IEntityTypeConfiguration<IoTDevice>
         builder.Property(d => d.InstalledAt)
             .HasColumnName("installation_date");
 
-        builder.HasIndex(d => d.ProjectId);
+        builder.HasIndex(d => d.SpaceId);
     }
 }

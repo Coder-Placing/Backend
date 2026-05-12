@@ -28,10 +28,19 @@ public class WorkItemRepository : IWorkItemRepository
         return await _context.Tasks.FindAsync(id);
     }
 
-    public async Task<IEnumerable<WorkItem>> ListByProjectIdAsync(int projectId)
+    public async Task<IEnumerable<WorkItem>> ListBySpaceIdAsync(long spaceId)
     {
         return await _context.Tasks
-            .Where(t => t.ProjectId == projectId)
+            .Where(t => t.SpaceId == spaceId)
             .ToListAsync();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var workItem = await _context.Tasks.FindAsync(id);
+        if (workItem != null)
+        {
+            _context.Tasks.Remove(workItem);
+        }
     }
 }

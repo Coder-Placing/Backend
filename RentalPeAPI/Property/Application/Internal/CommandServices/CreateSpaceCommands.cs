@@ -2,28 +2,39 @@
 {
     public class CreateSpaceCommand
     {
-        public string Name { get; }
+        public Guid HomeownerId { get; }
+        public string Title { get; }
         public string Description { get; }
-        public decimal PricePerHour { get; }
-        public string Type { get; }
         public string Location { get; }
-        public long OwnerId { get; }
-        public string Status { get; set; }
-        public decimal AreaM2 { get; set; }
+        public string SpaceType { get; }
+        public decimal DimensionsSquareMeters { get; }
+        public decimal EstimatedBudget { get; }
+        public string Currency { get; }
+        public bool HasIot { get; }
+        public List<string> Images { get; }
 
-        public IEnumerable<string> Services { get; }
-
-        public CreateSpaceCommand(string name, string description, decimal pricePerHour, string type, string location, long ownerId, IEnumerable<string> services, string status, decimal areaM2)
+        public CreateSpaceCommand(
+            Guid homeownerId,
+            string title,
+            string description,
+            string location,
+            string spaceType,
+            decimal dimensionsSquareMeters,
+            decimal estimatedBudget,
+            string currency,
+            bool hasIot,
+            List<string> images)
         {
-            Name = name;
+            HomeownerId = homeownerId;
+            Title = title;
             Description = description;
-            PricePerHour = pricePerHour;
-            Type = type;
             Location = location;
-            OwnerId = ownerId;
-            Services = services;
-            Status = status;
-            AreaM2 = areaM2;
+            SpaceType = spaceType;
+            DimensionsSquareMeters = dimensionsSquareMeters;
+            EstimatedBudget = estimatedBudget;
+            Currency = currency;
+            HasIot = hasIot;
+            Images = images ?? new();
         }
     }
 }

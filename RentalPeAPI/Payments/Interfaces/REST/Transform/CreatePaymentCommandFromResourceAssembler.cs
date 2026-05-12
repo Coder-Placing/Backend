@@ -16,13 +16,14 @@ public static class CreatePaymentCommandFromResourceAssembler
             last4: null);
 
         return new CreatePaymentCommand(
-            UserId:      resource.UserId,
-            ProjectId:   resource.ProjectId,
-            Installment: resource.Installment,
-            Money:       money,
-            Method:      method,
-            Reference:   null,               
-            Date:        resource.Date
+            SpaceId:      resource.SpaceId,
+            PayerUserId:  resource.PayerUserId,
+            PayeeUserId:  resource.PayeeUserId,
+            Installment:  resource.Installment,
+            Money:        money,
+            Method:       method,
+            Reference:    null,
+            Date:         resource.Date
         );
     }
 }

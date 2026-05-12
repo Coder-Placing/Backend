@@ -12,16 +12,20 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Transform
             return new SpaceResource
             {
                 Id = dto.Id,
-                Name = dto.Name,
+                Title = dto.Title,
                 Description = dto.Description,
-                PricePerHour = dto.PricePerHour,
-                Type = dto.Type,
-                Address = dto.Location,
-                OwnerId = dto.OwnerId,
-                Services = dto.Services?.Select(s => s.Name).ToList() ?? new List<string>(),
-                AreaM2 = dto.AreaM2,
+                Location = dto.Location,
+                HomeownerId = dto.HomeownerId,
+                RemodelerId = dto.RemodelerId,
+                SpaceType = dto.SpaceType,
+                DimensionsSquareMeters = dto.DimensionsSquareMeters,
+                EstimatedBudget = dto.EstimatedBudget,
+                Currency = dto.Currency,
+                HasIot = dto.HasIot,
                 Status = dto.Status,
-                CreatedAt = dto.CreatedAt
+                Images = dto.Images ?? new List<string>(),
+                PublishedAt = dto.PublishedAt,
+                AcceptedAt = dto.AcceptedAt
             };
         }
     }

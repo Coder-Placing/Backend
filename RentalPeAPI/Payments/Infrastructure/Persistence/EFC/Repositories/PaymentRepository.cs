@@ -11,10 +11,17 @@ public class PaymentRepository : BaseRepository<Payment>, IPaymentRepository
 {
     public PaymentRepository(AppDbContext context) : base(context) { }
 
-    public async Task<IEnumerable<Payment>> FindByUserIdAsync(int userId)
+    public async Task<IEnumerable<Payment>> FindByPayerUserIdAsync(Guid payerId)
     {
         return await Context.Set<Payment>()
-            .Where(p => p.UserId == userId)
+            .Where(p => p.PayerUserId == payerId)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Payment>> FindByPayeeUserIdAsync(Guid payeeId)
+    {
+        return await Context.Set<Payment>()
+            .Where(p => p.PayeeUserId == payeeId)
             .ToListAsync();
     }
 
@@ -31,23 +38,23 @@ public class PaymentRepository : BaseRepository<Payment>, IPaymentRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Payment>> FindByStatusAndUserIdAsync(PaymentStatus status, int userId)
+    public async Task<IEnumerable<Payment>> FindByStatusAndPayerUserIdAsync(PaymentStatus status, Guid payerId)
     {
         return await Context.Set<Payment>()
-            .Where(p => p.Status == status && p.UserId == userId)
+            .Where(p => p.Status == status && p.PayerUserId == payerId)
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Payment>> FindByProjectIdAsync(int projectId)
+    public async Task<IEnumerable<Payment>> FindBySpaceIdAsync(long spaceId)
     {
         return await Context.Set<Payment>()
-            .Where(p => p.ProjectId == projectId)
+            .Where(p => p.SpaceId == spaceId)
             .ToListAsync();
     }
 
-    public async Task<Payment?> FindByProjectAndInstallmentAsync(int projectId, int installment)
+    public async Task<Payment?> FindBySpaceAndInstallmentAsync(long spaceId, int installment)
     {
         return await Context.Set<Payment>()
-            .FirstOrDefaultAsync(p => p.ProjectId == projectId && p.Installment == installment);
+            .FirstOrDefaultAsync(p => p.SpaceId == spaceId && p.Installment == installment);
     }
 }
