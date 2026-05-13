@@ -33,7 +33,7 @@ public class IoTDevice
     public string SerialNumber { get; private set; } = string.Empty;
     public string MetricName { get; private set; } = string.Empty;
     public string Unit { get; private set; } = string.Empty;
-    public int Value { get; private set; }
+    public double Value { get; private set; }
     public DateTime Timestamp { get; private set; }
     public bool IsOn { get; private set; }
 
@@ -138,15 +138,18 @@ public class IoTDevice
     }
 
     /// <summary>
-    /// Genera un valor aleatorio de telemetría y actualiza el timestamp.
+    /// Genera un valor de telemetría incrementando el valor actual en un pequeño rango aleatorio.
     /// Solo se ejecuta si el dispositivo está encendido (IsOn = true).
+    /// Si está apagado, mantiene el último valor sin cambios.
     /// </summary>
     public void GenerateRandomValue()
     {
         if (!IsOn)
             return;
 
-        Value = Random.Shared.Next(10, 100);
+        // Incrementar el valor actual en un rango pequeño (0.1 a 2.0)
+        double increment = Random.Shared.NextDouble() * 1.9 + 0.1;
+        Value = Value + increment;
         Timestamp = DateTime.UtcNow;
     }
 }

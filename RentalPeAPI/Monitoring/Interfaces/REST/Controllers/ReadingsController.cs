@@ -1,78 +1,191 @@
 ﻿// Monitoring/Interfaces/REST/Controllers/ReadingsController.cs
 using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RentalPeAPI.Monitoring.Application.Internal.CommandServices;
-using RentalPeAPI.Monitoring.Application.Internal.QueryServices;
+using RentalPeAPI.Monitoring.Domain.Repositories;
 using RentalPeAPI.Monitoring.Interfaces.REST.Resources;
+using RentalPeAPI.Shared.Domain.Repositories;
 
 namespace RentalPeAPI.Monitoring.Interfaces.REST.Controllers;
 
 /// <summary>
-/// Controlador para la ingesta y consulta de lecturas de telemetría de dispositivos IoT.
+/// Controlador refactorizado para gestionar lecturas de telemetría de dispositivos IoT.
+/// Ya no usa tabla de Readings. Consulta directamente los IoTDevices y simula telemetría.
 /// </summary>
 [ApiController]
 [Route("api/v1/monitoring/[controller]")]
+[Tags("Readings")]
 [Authorize] // ← CRÍTICO: Requiere autenticación JWT
 public class ReadingsController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IIoTDeviceRepository _deviceRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ReadingsController(IMediator mediator)
+    public ReadingsController(IIoTDeviceRepository deviceRepository, IUnitOfWork unitOfWork)
     {
-        _mediator = mediator;
+        _deviceRepository = deviceRepository;
+        _unitOfWork = unitOfWork;
     }
 
     /// <summary>
-    /// POST: Ingesta de telemetría de dispositivos IoT vinculados a un espacio.
-    /// Solo accesible para usuarios autenticados.
+    /// GET: /api/v1/monitoring/readings/device/{deviceId}
+    /// Devuelve el detalle completo de un dispositivo específico con su telemetría actual.
+    /// Antes de retornar, invoca GenerateRandomValue() y persiste los cambios.
     /// </summary>
-    [HttpPost]
+    [HttpGet("device/{deviceId:long}")]
     [Authorize(Roles = "Homeowner,Remodeler")]
-    public async Task<IActionResult> IngestReading([FromBody] IngestReadingResource resource)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        // Validar que el usuario autenticado tenga un NameIdentifier válido
-        var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim))
-            return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
-
-        var command = new IngestReadingCommand(
-            resource.SpaceId,
-            resource.IoTDeviceId,
-            resource.MetricName,
-            resource.Value,
-            resource.Unit,
-            resource.Timestamp
-        );
-
-        var success = await _mediator.Send(command);
-
-        return success ? Accepted() : StatusCode(500, "No se pudo registrar la lectura.");
-    }
-
-    /// <summary>
-    /// GET: Obtiene la última lectura registrada para un dispositivo IoT.
-    /// </summary>
-    [HttpGet("device/{iotDeviceId:long}/latest")]
-    [Authorize(Roles = "Homeowner,Remodeler")]
-    public async Task<IActionResult> GetLatestByDevice(long iotDeviceId)
+    [ProducesResponseType(200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetDeviceDetail(long deviceId)
     {
         // Validar que el usuario autenticado tenga un NameIdentifier válido
         var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
 
-        var query = new GetLatestReadingByDeviceQuery(iotDeviceId);
-        var reading = await _mediator.Send(query);
+        try
+        {
+            // Recuperar el dispositivo
+            var device = await _deviceRepository.FindByIdAsync(deviceId);
+            if (device == null)
+                return NotFound(new { error = $"Dispositivo con ID {deviceId} no encontrado." });
 
-        if (reading is null) return NotFound();
+            // Invocar simulación de telemetría
+            device.GenerateRandomValue();
 
-        return Ok(reading);
+            // Persistir cambios
+            await _unitOfWork.CompleteAsync();
+
+            // Mapear a DTO
+            var resource = new IoTDeviceDetailResource(
+                device.Id,
+                device.SpaceId,
+                device.Type,
+                device.Name,
+                device.SerialNumber,
+                device.MetricName,
+                device.Unit,
+                device.Value,
+                device.Timestamp
+            );
+
+            return Ok(resource);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Error al obtener detalle del dispositivo.", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// GET: /api/v1/monitoring/readings/space/{spaceId}
+    /// Devuelve la lista de detalles de todos los dispositivos de un espacio.
+    /// Antes de retornar, invoca GenerateRandomValue() para cada dispositivo y persiste los cambios.
+    /// </summary>
+    [HttpGet("space/{spaceId:long}")]
+    [Authorize(Roles = "Homeowner,Remodeler")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetSpaceReadings(long spaceId)
+    {
+        // Validar que el usuario autenticado tenga un NameIdentifier válido
+        var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim))
+            return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
+
+        try
+        {
+            // Recuperar dispositivos del espacio
+            var devices = await _deviceRepository.ListBySpaceIdAsync(spaceId);
+            if (!devices.Any())
+                return NotFound(new { error = $"No se encontraron dispositivos para el espacio {spaceId}." });
+
+            // Invocar simulación de telemetría para cada dispositivo
+            foreach (var device in devices)
+            {
+                device.GenerateRandomValue();
+            }
+
+            // Persistir cambios
+            await _unitOfWork.CompleteAsync();
+
+            // Mapear a DTOs
+            var resources = devices.Select(d => new IoTDeviceDetailResource(
+                d.Id,
+                d.SpaceId,
+                d.Type,
+                d.Name,
+                d.SerialNumber,
+                d.MetricName,
+                d.Unit,
+                d.Value,
+                d.Timestamp
+            )).ToList();
+
+            return Ok(resources);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Error al obtener lecturas del espacio.", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// GET: /api/v1/monitoring/readings/user
+    /// Extrae el ID del usuario del token JWT y devuelve los detalles de todos sus dispositivos.
+    /// Antes de retornar, invoca GenerateRandomValue() para cada dispositivo y persiste los cambios.
+    /// </summary>
+    [HttpGet("user")]
+    [Authorize(Roles = "Homeowner,Remodeler")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetUserReadings()
+    {
+        // Validar que el usuario autenticado tenga un NameIdentifier válido
+        var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier válido." });
+
+        try
+        {
+            // Recuperar dispositivos del usuario
+            var devices = await _deviceRepository.ListByCreatedByUserIdAsync(userId);
+            if (!devices.Any())
+                return NotFound(new { error = "No se encontraron dispositivos para el usuario autenticado." });
+
+            // Invocar simulación de telemetría para cada dispositivo
+            foreach (var device in devices)
+            {
+                device.GenerateRandomValue();
+            }
+
+            // Persistir cambios
+            await _unitOfWork.CompleteAsync();
+
+            // Mapear a DTOs
+            var resources = devices.Select(d => new IoTDeviceDetailResource(
+                d.Id,
+                d.SpaceId,
+                d.Type,
+                d.Name,
+                d.SerialNumber,
+                d.MetricName,
+                d.Unit,
+                d.Value,
+                d.Timestamp
+            )).ToList();
+
+            return Ok(resources);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Error al obtener lecturas del usuario.", details = ex.Message });
+        }
     }
 }
