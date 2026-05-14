@@ -4,12 +4,10 @@ using System.Text.Json.Serialization;
 namespace RentalPeAPI.Monitoring.Interfaces.REST.Resources;
 
 /// <summary>
-/// DTO para presentar el detalle completo de un dispositivo IoT con telemetría,
-/// umbrales e información de estado de alerta. Incluye toda la metadata para monitoreo.
-/// Campos: id, spaceId, type, name, serialNumber, metricName, unit, value, timestamp,
-/// isOn, minThreshold, maxThreshold, isInAlertState
+/// DTO extendido que presenta el detalle completo de un dispositivo IoT con telemetría,
+/// umbrales e información de estado de alerta. Incluye metadata para monitoreo avanzado.
 /// </summary>
-public record IoTDeviceDetailResource(
+public record IoTDeviceDetailExtendedResource(
     [property: JsonPropertyName("id")] long Id,
     [property: JsonPropertyName("spaceId")] long SpaceId,
     [property: JsonPropertyName("type")] string Type,
@@ -24,3 +22,4 @@ public record IoTDeviceDetailResource(
     [property: JsonPropertyName("maxThreshold")] decimal MaxThreshold,
     [property: JsonPropertyName("isInAlertState")] bool IsInAlertState
 );
+

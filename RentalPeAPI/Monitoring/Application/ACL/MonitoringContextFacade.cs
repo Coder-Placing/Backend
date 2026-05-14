@@ -43,7 +43,9 @@ public class MonitoringContextFacade : IMonitoringContextFacade
             Name: name,
             SerialNumber: serialNumber,
             CustomMetricName: null,
-            CustomUnit: null
+            CustomUnit: null,
+            CustomMinThreshold: null,
+            CustomMaxThreshold: null
         );
 
         var device = await _mediator.Send(command);

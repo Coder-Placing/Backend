@@ -1,6 +1,7 @@
 ﻿// Monitoring/Interfaces/REST/Controllers/ReadingsController.cs
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -31,8 +32,26 @@ public class ReadingsController : ControllerBase
     }
 
     /// <summary>
+    /// Método privado helper para extraer propiedades privadas del agregado IoTDevice.
+    /// Utiliza Reflection para acceder a MinThreshold, MaxThreshold e IsInAlertState
+    /// que son gestionadas internamente por el dominio.
+    /// </summary>
+    private static (decimal MinThreshold, decimal MaxThreshold, bool IsInAlertState) ExtractPrivateProperties(object device)
+    {
+        var minThresholdProp = device.GetType().GetProperty("MinThreshold", BindingFlags.NonPublic | BindingFlags.Instance);
+        var maxThresholdProp = device.GetType().GetProperty("MaxThreshold", BindingFlags.NonPublic | BindingFlags.Instance);
+        var isInAlertStateProp = device.GetType().GetProperty("IsInAlertState", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        var minThreshold = minThresholdProp?.GetValue(device) as decimal? ?? 0m;
+        var maxThreshold = maxThresholdProp?.GetValue(device) as decimal? ?? 100m;
+        var isInAlertState = isInAlertStateProp?.GetValue(device) as bool? ?? false;
+
+        return (minThreshold, maxThreshold, isInAlertState);
+    }
+
+    /// <summary>
     /// GET: /api/v1/monitoring/readings/device/{deviceId}
-    /// Devuelve el detalle completo de un dispositivo específico con su telemetría actual.
+    /// Devuelve el detalle completo de un dispositivo específico con telemetría, umbrales y estado de alerta.
     /// Antes de retornar, invoca GenerateRandomValue() y persiste los cambios.
     /// </summary>
     [HttpGet("device/{deviceId:long}")]
@@ -43,7 +62,7 @@ public class ReadingsController : ControllerBase
     public async Task<IActionResult> GetDeviceDetail(long deviceId)
     {
         // Validar que el usuario autenticado tenga un NameIdentifier válido
-        var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
 
@@ -60,8 +79,11 @@ public class ReadingsController : ControllerBase
             // Persistir cambios
             await _unitOfWork.CompleteAsync();
 
-            // Mapear a DTO
-            var resource = new IoTDeviceDetailResource(
+            // Extraer propiedades privadas usando Reflection
+            var (minThreshold, maxThreshold, isInAlertState) = ExtractPrivateProperties(device);
+
+            // Mapear a DTO extendido con toda la información
+            var resource = new IoTDeviceDetailExtendedResource(
                 device.Id,
                 device.SpaceId,
                 device.Type,
@@ -70,7 +92,11 @@ public class ReadingsController : ControllerBase
                 device.MetricName,
                 device.Unit,
                 device.Value,
-                device.Timestamp
+                device.Timestamp,
+                device.IsOn,
+                minThreshold,
+                maxThreshold,
+                isInAlertState
             );
 
             return Ok(resource);
@@ -81,9 +107,10 @@ public class ReadingsController : ControllerBase
         }
     }
 
+
     /// <summary>
     /// GET: /api/v1/monitoring/readings/space/{spaceId}
-    /// Devuelve la lista de detalles de todos los dispositivos de un espacio.
+    /// Devuelve la lista de detalles de todos los dispositivos de un espacio con telemetría, umbrales y estado de alerta.
     /// Antes de retornar, invoca GenerateRandomValue() para cada dispositivo y persiste los cambios.
     /// </summary>
     [HttpGet("space/{spaceId:long}")]
@@ -94,7 +121,7 @@ public class ReadingsController : ControllerBase
     public async Task<IActionResult> GetSpaceReadings(long spaceId)
     {
         // Validar que el usuario autenticado tenga un NameIdentifier válido
-        var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
 
@@ -114,18 +141,26 @@ public class ReadingsController : ControllerBase
             // Persistir cambios
             await _unitOfWork.CompleteAsync();
 
-            // Mapear a DTOs
-            var resources = devices.Select(d => new IoTDeviceDetailResource(
-                d.Id,
-                d.SpaceId,
-                d.Type,
-                d.Name,
-                d.SerialNumber,
-                d.MetricName,
-                d.Unit,
-                d.Value,
-                d.Timestamp
-            )).ToList();
+            // Mapear a DTOs extendidos con toda la información
+            var resources = devices.Select(d =>
+            {
+                var (minThreshold, maxThreshold, isInAlertState) = ExtractPrivateProperties(d);
+                return new IoTDeviceDetailExtendedResource(
+                    d.Id,
+                    d.SpaceId,
+                    d.Type,
+                    d.Name,
+                    d.SerialNumber,
+                    d.MetricName,
+                    d.Unit,
+                    d.Value,
+                    d.Timestamp,
+                    d.IsOn,
+                    minThreshold,
+                    maxThreshold,
+                    isInAlertState
+                );
+            }).ToList();
 
             return Ok(resources);
         }
@@ -137,7 +172,7 @@ public class ReadingsController : ControllerBase
 
     /// <summary>
     /// GET: /api/v1/monitoring/readings/user
-    /// Extrae el ID del usuario del token JWT y devuelve los detalles de todos sus dispositivos.
+    /// Extrae el ID del usuario del token JWT y devuelve los detalles de todos sus dispositivos con telemetría, umbrales y estado de alerta.
     /// Antes de retornar, invoca GenerateRandomValue() para cada dispositivo y persiste los cambios.
     /// </summary>
     [HttpGet("user")]
@@ -148,7 +183,7 @@ public class ReadingsController : ControllerBase
     public async Task<IActionResult> GetUserReadings()
     {
         // Validar que el usuario autenticado tenga un NameIdentifier válido
-        var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier válido." });
 
@@ -168,18 +203,26 @@ public class ReadingsController : ControllerBase
             // Persistir cambios
             await _unitOfWork.CompleteAsync();
 
-            // Mapear a DTOs
-            var resources = devices.Select(d => new IoTDeviceDetailResource(
-                d.Id,
-                d.SpaceId,
-                d.Type,
-                d.Name,
-                d.SerialNumber,
-                d.MetricName,
-                d.Unit,
-                d.Value,
-                d.Timestamp
-            )).ToList();
+            // Mapear a DTOs extendidos con toda la información
+            var resources = devices.Select(d =>
+            {
+                var (minThreshold, maxThreshold, isInAlertState) = ExtractPrivateProperties(d);
+                return new IoTDeviceDetailExtendedResource(
+                    d.Id,
+                    d.SpaceId,
+                    d.Type,
+                    d.Name,
+                    d.SerialNumber,
+                    d.MetricName,
+                    d.Unit,
+                    d.Value,
+                    d.Timestamp,
+                    d.IsOn,
+                    minThreshold,
+                    maxThreshold,
+                    isInAlertState
+                );
+            }).ToList();
 
             return Ok(resources);
         }
