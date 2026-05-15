@@ -108,7 +108,7 @@ namespace RentalPeAPI.Features
                 await this.ScenarioStartAsync();
 #line 7
     await testRunner.GivenAsync("the user provides valid registration details with email \"test@spacepulse.com\", pa" +
-                        "ssword \"SecurePass123!\", and role \"Owner\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+                        "ssword \"SecurePass123!\", and role \"Homeowner\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line hidden
 #line 8
     await testRunner.WhenAsync("the user sends a POST request to the registration endpoint", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");

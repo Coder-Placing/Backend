@@ -4,7 +4,7 @@ Feature: User Identity and Access Management
   So that I can access the platform functionalities based on my role
 
   Scenario: Successful user registration with role assignment
-    Given the user provides valid registration details with email "test@spacepulse.com", password "SecurePass123!", and role "Owner"
+    Given the user provides valid registration details with email "test@spacepulse.com", password "SecurePass123!", and role "Homeowner"
     When the user sends a POST request to the registration endpoint
     Then the response status code should be 201 Created
     And the user should be saved in the database with the "Owner" role
