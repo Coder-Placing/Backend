@@ -22,6 +22,8 @@ public class Space
     public SpaceType SpaceType { get; private set; }
     public decimal DimensionsSquareMeters { get; private set; }
     public decimal EstimatedBudget { get; private set; }
+    public decimal EndingPricing { get; private set; } = 0m;
+    public bool IsOverBudgetNotified { get; private set; } = false;
     public string Currency { get; private set; } = "PEN";
     public SpaceStatus Status { get; private set; } = SpaceStatus.Published;
     public bool HasIot { get; private set; }
@@ -134,12 +136,67 @@ public class Space
     }
 
     /// <summary>
+    /// Marca el espacio como completado (finalizado) por el Homeowner.
+    /// Solo se puede completar desde estado Accepted.
+    /// El requestingUserId debe ser el propietario del espacio.
+    /// </summary>
+    public void CompleteProject(Guid requestingUserId)
+    {
+        if (requestingUserId == Guid.Empty)
+            throw new ArgumentException("El ID del usuario solicitante no puede estar vacío.", nameof(requestingUserId));
+        if (requestingUserId != HomeownerId)
+            throw new InvalidOperationException("Solo el propietario del espacio puede completar el proyecto.");
+        if (Status != SpaceStatus.Accepted)
+            throw new InvalidOperationException("Solo se pueden completar espacios en estado Accepted.");
+        
+        Status = SpaceStatus.Finished;
+    }
+
+    /// <summary>
+    /// Cancela el espacio por el Homeowner.
+    /// Se puede cancelar desde estados Published o Accepted, incluso si ya hay un Remodelador asignado.
+    /// El requestingUserId debe ser el propietario del espacio.
+    /// </summary>
+    public void CancelProject(Guid requestingUserId)
+    {
+        if (requestingUserId == Guid.Empty)
+            throw new ArgumentException("El ID del usuario solicitante no puede estar vacío.", nameof(requestingUserId));
+        if (requestingUserId != HomeownerId)
+            throw new InvalidOperationException("Solo el propietario del espacio puede cancelar el proyecto.");
+        if (Status == SpaceStatus.Finished || Status == SpaceStatus.Cancelled)
+            throw new InvalidOperationException("No se puede cancelar un espacio que ya ha sido completado o cancelado previamente.");
+        
+        Status = SpaceStatus.Cancelled;
+    }
+
+    /// <summary>
     /// Actualiza las imágenes del espacio.
     /// </summary>
     public void UpdateImages(IEnumerable<string> newImages)
     {
         Images.Clear();
         Images.AddRange(newImages ?? new List<string>());
+    }
+
+    /// <summary>
+    /// Actualiza el costo total de las tareas del espacio.
+    /// El valor representa la suma de los precios de todas las tareas asociadas.
+    /// </summary>
+    public void UpdateEndingPricing(decimal totalPricing)
+    {
+        if (totalPricing < 0)
+            throw new ArgumentException("El costo total no puede ser negativo.", nameof(totalPricing));
+        
+        EndingPricing = totalPricing;
+    }
+
+    /// <summary>
+    /// Marca el espacio como notificado sobre sobrecosto.
+    /// Se utiliza para evitar múltiples notificaciones cuando ya se alertó al propietario.
+    /// </summary>
+    public void MarkAsOverBudgetNotified()
+    {
+        IsOverBudgetNotified = true;
     }
 
     /// <summary>
