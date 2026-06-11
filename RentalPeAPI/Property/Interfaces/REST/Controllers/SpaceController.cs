@@ -23,15 +23,10 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Controllers
         
         [HttpGet]
         [Authorize(Roles = "Homeowner,Remodeler")]
-        public async Task<ActionResult<IEnumerable<SpaceResource>>> GetAllSpaces([FromQuery] string? status = null)
+        public async Task<ActionResult<IEnumerable<SpaceResource>>> GetAllSpaces()
         {
-            // Extraer el ID del usuario desde el token JWT
-            var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-                return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
-
-            // Crear query con filtros: OwnerId (del token) y Status opcional
-            var query = new ListSpacesQuery(userId, status);
+            // Endpoint público autenticado para catálogo: lista solo espacios publicados.
+            var query = new ListSpacesQuery(null, "Published");
             var spaces = await _spaceAppService.ListSpacesAsync(query);
             var resources = spaces.Select(SpaceResourceAssembler.ToResource);
             return Ok(resources);
@@ -98,8 +93,7 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Controllers
             if (updated == null) return NotFound();
             return NoContent();
         }
-
-        // ✅ DELETE: api/v1/space/{id} - Solo Homeowners pueden eliminar sus espacios
+        
         [HttpDelete("{id}")]
         [Authorize(Roles = "Homeowner")]
         public async Task<IActionResult> DeleteSpace(long id)

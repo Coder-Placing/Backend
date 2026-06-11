@@ -32,16 +32,13 @@ public class ListIoTDevicesBySpaceQueryHandler
         ListIoTDevicesBySpaceQuery query,
         CancellationToken cancellationToken)
     {
-        // Obtener todos los dispositivos del espacio
         var devices = await _deviceRepository.ListBySpaceIdAsync(query.SpaceId);
-
-        // Simular telemetría: invocar GenerateRandomValue() para cada dispositivo encendido
+        
         foreach (var device in devices)
         {
             device.GenerateRandomValue();
         }
-
-        // Persistir los cambios en la base de datos
+        
         await _unitOfWork.CompleteAsync();
 
         return devices;

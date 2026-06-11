@@ -190,6 +190,13 @@ public class WorkItemController : ControllerBase
 
         try
         {
+            var space = await _spaceRepository.FindByIdAsync(resource.SpaceId);
+            if (space == null)
+                return NotFound(new { error = $"Space con ID {resource.SpaceId} no encontrado." });
+
+            if (space.RemodelerId != createdByUserId)
+                return Forbid();
+
             // Crear comando permitiendo Status y fechas del payload
             var command = new CreateWorkItemCommand(
                 resource.SpaceId,
@@ -473,7 +480,7 @@ public class WorkItemController : ControllerBase
             // Esto asegura que se ejecute el handler completo y se disparen notificaciones
             var finalStatus = !string.IsNullOrWhiteSpace(resource.Status) ? resource.Status : workItem.Status;
             
-            var command = new UpdateWorkItemStatusCommand(id, finalStatus, requestingUserId);
+            var command = new UpdateWorkItemStatusCommand(id, finalStatus, requestingUserId, resource.Price);
             var updatedWorkItem = await _mediator.Send(command);
 
             if (updatedWorkItem == null)

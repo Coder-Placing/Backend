@@ -12,6 +12,7 @@ namespace RentalPeAPI.Monitoring.Application.Internal.CommandServices;
 public record UpdateWorkItemStatusCommand(
     int TaskId,
     string Status,
-    Guid RequestingUserId
+    Guid RequestingUserId,
+    decimal? Price
 ) : IRequest<RentalPeAPI.Monitoring.Domain.Entities.WorkItem?>;
 

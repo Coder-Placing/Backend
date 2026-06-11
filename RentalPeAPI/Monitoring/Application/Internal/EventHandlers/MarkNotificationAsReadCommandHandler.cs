@@ -28,21 +28,17 @@ public class MarkNotificationAsReadCommandHandler : IRequestHandler<MarkNotifica
 
     public async Task<Unit> Handle(MarkNotificationAsReadCommand command, CancellationToken cancellationToken)
     {
-        // 1. Obtener la notificación
         var notification = await _notificationRepository.FindByIdAsync(command.NotificationId);
         if (notification == null)
             throw new KeyNotFoundException($"Notificación con ID {command.NotificationId} no encontrada.");
-
-        // 2. Validar que el usuario solicitante es el destinatario (VALIDACIÓN CRÍTICA DE SEGURIDAD)
+        
         if (notification.UserId != command.RequestingUserId)
             throw new UnauthorizedAccessException(
                 $"El usuario {command.RequestingUserId} no tiene permisos para marcar como leída la notificación. " +
                 $"Solo el destinatario (UserId: {notification.UserId}) puede hacerlo.");
-
-        // 3. Invocar el método de dominio
+        
         notification.MarkAsRead();
-
-        // 4. Persistir cambios
+        
         await _unitOfWork.CompleteAsync();
 
         return Unit.Value;

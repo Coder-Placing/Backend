@@ -1,5 +1,4 @@
-﻿// Monitoring/Interfaces/REST/Resources/CreateTaskPlanResource.cs
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -32,7 +31,7 @@ public class CreateTaskPlanResource
 
     [StringLength(2048, ErrorMessage = "PhotoUrl no puede exceder 2048 caracteres")]
     [JsonPropertyName("photoUrl")]
-    public string? PhotoUrl { get; set; } // Opcional
+    public string? PhotoUrl { get; set; } 
 
     [Required(ErrorMessage = "Status es requerido")]
     [StringLength(50, MinimumLength = 1, ErrorMessage = "Status debe tener entre 1 y 50 caracteres")]
@@ -40,12 +39,12 @@ public class CreateTaskPlanResource
     public string Status { get; set; } = default!;
 
     [JsonPropertyName("plannedStartDate")]
-    public DateTime? PlannedStartDate { get; set; } // Opcional pero validado en el dominio
+    public DateTime? PlannedStartDate { get; set; } 
 
     [JsonPropertyName("plannedEndDate")]
-    public DateTime? PlannedEndDate { get; set; } // Opcional pero validado en el dominio
+    public DateTime? PlannedEndDate { get; set; } 
 
-    [Range(0, 999999999999.99, ErrorMessage = "El precio no puede ser negativo")]
+    [Required(ErrorMessage = "El precio no puede ser negativo")]
     [JsonPropertyName("price")]
     public decimal Price { get; set; } = 0;
 

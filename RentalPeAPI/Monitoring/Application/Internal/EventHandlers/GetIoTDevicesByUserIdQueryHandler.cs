@@ -28,16 +28,12 @@ public class GetIoTDevicesByUserIdQueryHandler
         GetIoTDevicesByUserIdQuery query,
         CancellationToken cancellationToken)
     {
-        // Obtener todos los dispositivos creados por el usuario
         var devices = await _deviceRepository.ListByCreatedByUserIdAsync(query.UserId);
-
-        // Simular telemetría: invocar GenerateRandomValue() para cada dispositivo encendido
+        
         foreach (var device in devices)
         {
             device.GenerateRandomValue();
         }
-
-        // Persistir los cambios en la base de datos
         await _unitOfWork.CompleteAsync();
 
         return devices;

@@ -20,6 +20,7 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Transform
                 SpaceType = dto.SpaceType,
                 DimensionsSquareMeters = dto.DimensionsSquareMeters,
                 EstimatedBudget = dto.EstimatedBudget,
+                EndingPricing = dto.EndingPricing,
                 Currency = dto.Currency,
                 HasIot = dto.HasIot,
                 Status = dto.Status,

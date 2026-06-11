@@ -34,37 +34,16 @@ public class User
 
     public void AddPaymentMethod(Guid id, string type, string number, string expiry, string cvv)
     {
-        var pm = new PaymentMethod(id, Id, type, number, expiry, cvv);
-        PaymentMethods.Add(pm);
+        if (string.IsNullOrWhiteSpace(number))
+            throw new ArgumentException("Number is required.", nameof(number));
+        if (string.IsNullOrWhiteSpace(type))
+            throw new ArgumentException("Type is required.", nameof(type));
+        if (string.IsNullOrWhiteSpace(expiry))
+            throw new ArgumentException("Expiry is required.", nameof(expiry));
+
+        // Extraer solo los últimos 4 dígitos
+        string lastFour = number.Length >= 4 ? number.Substring(number.Length - 4) : number;
+        var paymentMethod = new PaymentMethod(id, this.Id, type, lastFour, expiry);
+        PaymentMethods.Add(paymentMethod);
     }
-}
-
-public class PaymentMethod
-{
-    private PaymentMethod() { }
-
-    public PaymentMethod(Guid id, Guid userId, string type, string number, string expiry, string cvv)
-    {
-        Id = id;
-        UserId = userId;
-        Type = type;
-        Number = number;
-        Expiry = expiry;
-        Cvv = cvv;
-    }
-
-    public Guid Id { get; private set; }
-
-    // FK al usuario
-    public Guid UserId { get; private set; }
-
-    public string Type { get; private set; } = string.Empty;
-    public string Number { get; private set; } = string.Empty;
-    public string Expiry { get; private set; } = string.Empty;
-
-    // Para que en JSON salga "cvv"
-    public string Cvv { get; private set; } = string.Empty;
-
-    // Navegación inversa (opcional pero útil)
-    public User? User { get; private set; }
 }

@@ -40,8 +40,7 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
         // Guardar la notificación en la BD
         await _notificationRepository.AddAsync(notification);
         await _unitOfWork.CompleteAsync();
-
-        // Retornar el ID generado
+        
         return notification.Id;
     }
 }

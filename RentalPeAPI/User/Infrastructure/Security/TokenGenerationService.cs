@@ -18,7 +18,7 @@ public class TokenGenerationService : ITokenGenerationService
 
     public string GenerateToken(Domain.User user)
     {
-        // Validación defensiva: garantizar que el rol sea exactamente "Homeowner" o "Remodeler"
+        // Validación para garantizar que el rol sea exactamente "Homeowner" o "Remodeler"
         var validRoles = new[] { "Homeowner", "Remodeler" };
         if (!validRoles.Contains(user.Role, StringComparer.OrdinalIgnoreCase))
         {

@@ -1,4 +1,3 @@
-// Monitoring/Application/Internal/QueryServices/GetWorkItemsByUserIdQuery.cs
 using MediatR;
 using RentalPeAPI.Monitoring.Interfaces.REST.Resources;
 

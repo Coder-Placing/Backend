@@ -8,10 +8,6 @@ namespace RentalPeAPI.Monitoring.Application.Internal.EventHandlers;
 
 /// <summary>
 /// Handler para actualizar nombre y número de serie de un dispositivo IoT.
-/// 
-/// REGLA DE CONGELAMIENTO DIFERENCIADO PARA IOTDEVICE:
-/// - Si el estado del espacio es nulo o "Cancelled", lanza excepción.
-/// - Los sensores NO se congelan si está en "Finished" (COMPLETED).
 /// </summary>
 public class UpdateIoTDeviceCommandHandler
     : IRequestHandler<UpdateIoTDeviceCommand, Unit>
@@ -40,12 +36,9 @@ public class UpdateIoTDeviceCommandHandler
             throw new KeyNotFoundException(
                 $"Dispositivo IoT con ID {command.DeviceId} no encontrado.");
         }
-
-        // ===== VALIDACIÓN DE CONGELAMIENTO PARA SENSORES IoT =====
-        // Obtener el estado del espacio desde la fachada ACL
+        
         var spaceStatus = await _propertyFacade.GetSpaceStatusAsync(device.SpaceId);
         
-        // REGLA ESTRICTA: Si el estado es nulo o "Cancelled", denegar acción
         if (string.IsNullOrEmpty(spaceStatus) || spaceStatus == "Cancelled")
         {
             throw new InvalidOperationException(

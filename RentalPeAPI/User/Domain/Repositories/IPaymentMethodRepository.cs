@@ -1,5 +1,4 @@
-﻿// RentalPeAPI/User/Domain/Repositories/IPaymentMethodRepository.cs
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace RentalPeAPI.User.Domain.Repositories;

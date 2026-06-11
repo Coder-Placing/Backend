@@ -42,14 +42,8 @@
         <Folder Include="Monitoring\Domain\Model\" />
         <Folder Include="Monitoring\Domain\Repositories\" />
         <Folder Include="Monitoring\Infrastructure\Persistence\EFC\Repositories\" />
-        <Folder Include="Payments\Infrastructure\Persistence\EFC\Configuration\Extensions\" />
-        <Folder Include="User\Application\ACL\" />
         <Folder Include="User\Application\Internal\QueryServices\" />
         <Folder Include="User\Domain\Services\" />
-        <Folder Include="User\Infrastructure\Interfaces\ASP\Configuration\Extensions\" />
-        <Folder Include="User\Infrastructure\Persistence\EFC\Configuration\Extensions\" />
-        <Folder Include="User\Interfaces\ACL\" />
-        <Folder Include="User\Interfaces\REST\Transform\" />
     </ItemGroup>
 
 </Project>

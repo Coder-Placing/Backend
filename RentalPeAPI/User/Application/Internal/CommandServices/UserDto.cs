@@ -3,9 +3,8 @@
 public record PaymentMethodDto(
     Guid Id,
     string Type,
-    string Number,
-    string Expiry,
-    string Cvv
+    string LastFourDigits,
+    string Expiry
 );
 
 public record UserDto(

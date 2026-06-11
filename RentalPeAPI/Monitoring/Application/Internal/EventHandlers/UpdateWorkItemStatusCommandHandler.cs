@@ -1,5 +1,6 @@
 ﻿// Monitoring/Application/Internal/EventHandlers/UpdateWorkItemStatusCommandHandler.cs
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
@@ -13,13 +14,8 @@ using RentalPeAPI.Shared.Domain.Repositories;
 namespace RentalPeAPI.Monitoring.Application.Internal.EventHandlers;
 
 /// <summary>
-/// Manejador del comando UpdateWorkItemStatusCommand.
-/// Valida que solo el remodelador asignado al espacio pueda cambiar el estado de la tarea.
-/// PASO 5B: Despacha automáticamente una notificación cuando la tarea cambia a "COMPLETED".
-/// 
-/// REGLA DE CONGELAMIENTO DIFERENCIADO PARA TAREAS:
-/// - Si el estado del espacio NO es "Published" ni "Accepted", lanza excepción.
-/// - Las tareas SÍ se congelan cuando el espacio está en "Finished" (COMPLETED).
+/// Handler para el comando UpdateWorkItemStatusCommand.
+/// Valida que solo el remodelador asignado al espacio pueda actualizar el estado de la tarea.
 /// </summary>
 public class UpdateWorkItemStatusCommandHandler : IRequestHandler<UpdateWorkItemStatusCommand, WorkItem?>
 {
@@ -45,48 +41,45 @@ public class UpdateWorkItemStatusCommandHandler : IRequestHandler<UpdateWorkItem
 
     public async Task<WorkItem?> Handle(UpdateWorkItemStatusCommand command, CancellationToken cancellationToken)
     {
-        // 1. Obtener la tarea
         var workItem = await _workItemRepository.FindByIdAsync(command.TaskId);
         if (workItem == null)
             throw new KeyNotFoundException($"WorkItem con ID {command.TaskId} no encontrado.");
-
-        // 2. Obtener el espacio
+        
         var space = await _spaceRepository.FindByIdAsync(workItem.SpaceId);
         if (space == null)
             throw new KeyNotFoundException($"Space con ID {workItem.SpaceId} no encontrado.");
-
-        // 3. Validación de permisos: Solo el remodelador asignado puede cambiar el estado
+        
         if (space.RemodelerId == null || space.RemodelerId != command.RequestingUserId)
             throw new UnauthorizedAccessException(
                 $"El usuario {command.RequestingUserId} no tiene permisos para cambiar el estado de la tarea. " +
                 $"Solo el remodelador asignado al espacio (RemodelerId: {space.RemodelerId}) puede hacerlo.");
-
-        // ===== VALIDACIÓN DE CONGELAMIENTO PARA TAREAS =====
-        // Obtener el estado del espacio desde la fachada ACL
+        
         var spaceStatus = await _propertyFacade.GetSpaceStatusAsync(workItem.SpaceId);
         
-        // REGLA ESTRICTA: Si el estado NO es "Published" ni "Accepted", no se pueden actualizar tareas
         if (string.IsNullOrEmpty(spaceStatus) || 
             (spaceStatus != "Published" && spaceStatus != "Accepted"))
         {
             throw new InvalidOperationException(
                 "No se pueden modificar tareas: El espacio está completado o cancelado.");
         }
-
-        // 4. Verificar si el estado anterior era distinto de COMPLETED y ahora lo es
+        
         bool transitioningToCompleted = !workItem.Status.Equals("COMPLETED", StringComparison.OrdinalIgnoreCase) 
                                        && command.Status.Equals("COMPLETED", StringComparison.OrdinalIgnoreCase);
-
-        // 5. Actualizar el estado de la tarea usando el método de dominio
-        // Nota: UpdateProgress mantiene las fechas existentes
+        
         workItem.UpdateProgress(command.Status, workItem.PlannedStartDate, workItem.PlannedEndDate);
 
-        // 6. Persistir cambios
+        if (command.Price.HasValue)
+        {
+            workItem.UpdatePrice(command.Price.Value);
+            var workItems = await _workItemRepository.ListBySpaceIdAsync(workItem.SpaceId);
+            var totalPricing = workItems.Sum(item => item.Price);
+            await _propertyFacade.UpdateSpaceTotalPricingAsync(workItem.SpaceId, totalPricing);
+        }
+        
         await _unitOfWork.CompleteAsync();
         
          if (transitioningToCompleted)
          {
-             // Se le notifica que una de sus tareas ha sido completada
              var notificationCommandHomeowner = new CreateNotificationCommand(
                  space.HomeownerId,
                  space.Id,
@@ -95,7 +88,6 @@ public class UpdateWorkItemStatusCommandHandler : IRequestHandler<UpdateWorkItem
              );
              await _mediator.Send(notificationCommandHomeowner);
              
-             // Se le confirma que su tarea completada ha sido registrada
              var notificationCommandRemodeler = new CreateNotificationCommand(
                  space.RemodelerId.Value,
                  space.Id,
@@ -104,8 +96,7 @@ public class UpdateWorkItemStatusCommandHandler : IRequestHandler<UpdateWorkItem
              );
              await _mediator.Send(notificationCommandRemodeler);
          }
-
-        // 7. Retornar la entidad actualizada
+         
         return workItem;
     }
 }

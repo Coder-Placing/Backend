@@ -39,30 +39,23 @@ public class UpdateSpaceTotalPricingCommandHandler : IRequestHandler<UpdateSpace
 
     public async Task<bool> Handle(UpdateSpaceTotalPricingCommand request, CancellationToken cancellationToken)
     {
-        // 1. Obtener el espacio
         var space = await _spaceRepository.FindByIdAsync(request.SpaceId) 
             ?? throw new KeyNotFoundException($"Space con ID {request.SpaceId} no encontrado.");
-
-        // 2. Actualizar el costo total de las tareas del espacio
+        
         space.UpdateEndingPricing(request.TotalPricing);
-
-        // 3. Evaluar si hay sobrecosto
+        
         bool isOverBudget = space.EndingPricing > space.EstimatedBudget;
-
-        // 4. Si hay sobrecosto y aún no se ha notificado, despachar alerta
+        
         if (isOverBudget && !space.IsOverBudgetNotified)
         {
-            // Marcar como notificado para evitar múltiples alertas
             space.MarkAsOverBudgetNotified();
-
-            // Construir el mensaje de alerta
+            
             var overBudgetAmount = space.EndingPricing - space.EstimatedBudget;
             string alertMessage = 
                 $"El costo total de las tareas ({space.Currency} {space.EndingPricing:F2}) " +
                 $"ha superado tu presupuesto estimado inicial ({space.Currency} {space.EstimatedBudget:F2}). " +
                 $"Contacta al remodelador si tienes inquietudes sobre los costos.";
-
-            // Despachar notificación al propietario via Monitoring BC
+            
             await _monitoringFacade.DispatchNotificationAsync(
                 space.HomeownerId,
                 space.Id,
@@ -70,8 +63,7 @@ public class UpdateSpaceTotalPricingCommandHandler : IRequestHandler<UpdateSpace
                 alertMessage
             );
         }
-
-        // 5. Persisti cambios (incluyendo IsOverBudgetNotified si fue marcado)
+        
         await _unitOfWork.CompleteAsync();
 
         return true;

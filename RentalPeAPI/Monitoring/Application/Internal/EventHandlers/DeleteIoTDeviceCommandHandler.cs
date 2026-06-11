@@ -24,23 +24,20 @@ public class DeleteIoTDeviceCommandHandler : IRequestHandler<DeleteIoTDeviceComm
 
     public async Task<Unit> Handle(DeleteIoTDeviceCommand command, CancellationToken cancellationToken)
     {
-        // Buscar el dispositivo
         var device = await _deviceRepository.FindByIdAsync(command.DeviceId);
         if (device == null)
         {
             throw new KeyNotFoundException(
                 $"Dispositivo IoT con ID {command.DeviceId} no encontrado.");
         }
-
-        // Validación estricta: Solo el creador puede eliminar el dispositivo
+        
         if (device.CreatedByUserId != command.RequestingUserId)
         {
             throw new UnauthorizedAccessException(
                 $"El usuario {command.RequestingUserId} no tiene autorización para eliminar el dispositivo {command.DeviceId}. " +
                 $"Solo el creador del dispositivo (CreatedByUserId: {device.CreatedByUserId}) puede eliminarlo.");
         }
-
-        // Eliminar el dispositivo
+        
         _deviceRepository.Remove(device);
         await _unitOfWork.CompleteAsync();
 

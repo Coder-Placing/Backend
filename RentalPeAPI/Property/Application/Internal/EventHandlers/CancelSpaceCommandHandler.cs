@@ -31,29 +31,23 @@ public class CancelSpaceCommandHandler
     /// </summary>
     public async Task<bool> HandleAsync(CancelSpaceCommand request)
     {
-        // Obtener el espacio
         var space = await _spaceRepository.FindByIdAsync(request.SpaceId);
         if (space == null)
             return false;
-
-        // Guardar el RemodelerId antes de ejecutar la cancelación (por si se limpia en la lógica de dominio)
+        
         var remodelerId = space.RemodelerId;
-
-        // Ejecutar la lógica de dominio de cancelación
+        
         space.CancelProject(request.RequestingUserId);
         
-        // Persistir cambios en Property
         await _unitOfWork.CompleteAsync();
-
-        // Notificación al Propietario
+        
         await _monitoringFacade.DispatchNotificationAsync(
             space.HomeownerId,
             request.SpaceId,
             "Solicitud Cancelada",
             $"El proyecto ha sido cancelado exitosamente. Todos los sensores vinculados han sido desactivados."
         );
-
-        // Notificación al Remodelador (si estaba asignado)
+        
         if (remodelerId.HasValue)
         {
             await _monitoringFacade.DispatchNotificationAsync(
@@ -63,8 +57,7 @@ public class CancelSpaceCommandHandler
                 "El propietario ha cancelado el proyecto en el que estabas asignado. Los sensores vinculados han sido desactivados."
             );
         }
-
-        // Apagar automáticamente todos los dispositivos IoT del espacio
+        
         await _monitoringFacade.DisableAllDevicesForSpaceAsync(request.SpaceId);
 
         return true;

@@ -18,6 +18,7 @@ public class PaymentMethodRepository : IPaymentMethodRepository
 
     public async Task AddAsync(PaymentMethod paymentMethod)
     {
+        await _context.Entry(paymentMethod).Reference("User").LoadAsync();
         await _context.PaymentMethods.AddAsync(paymentMethod);
     }
 }

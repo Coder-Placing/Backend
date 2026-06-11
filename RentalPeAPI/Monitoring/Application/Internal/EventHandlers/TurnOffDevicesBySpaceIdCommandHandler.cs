@@ -24,16 +24,13 @@ public class TurnOffDevicesBySpaceIdCommandHandler : IRequestHandler<TurnOffDevi
 
     public async Task<Unit> Handle(TurnOffDevicesBySpaceIdCommand command, CancellationToken cancellationToken)
     {
-        // Buscar todos los dispositivos asociados al espacio
         var devices = await _deviceRepository.ListBySpaceIdAsync(command.SpaceId);
-
-        // Iterar sobre los dispositivos y apagar cada uno
+        
         foreach (var device in devices)
         {
             device.TurnOff();
         }
-
-        // Persistir todos los cambios
+        
         await _unitOfWork.CompleteAsync();
 
         return Unit.Value;

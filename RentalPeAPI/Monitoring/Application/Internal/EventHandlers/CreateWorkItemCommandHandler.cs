@@ -14,11 +14,6 @@ namespace RentalPeAPI.Monitoring.Application.Internal.EventHandlers;
 /// <summary>
 /// Manejador del comando CreateWorkItemCommand.
 /// Crea una nueva tarea (WorkItem) y la persiste en la base de datos.
-/// 
-/// REGLA DE CONGELAMIENTO DIFERENCIADO PARA TAREAS:
-/// - Si el estado del espacio NO es "Published" ni "Accepted", lanza excepción.
-/// - Las tareas SÍ se congelan cuando el espacio está en "Finished" (COMPLETED).
-/// - No se pueden modificar tareas si el espacio está completado o cancelado.
 /// </summary>
 public class CreateWorkItemCommandHandler : IRequestHandler<CreateWorkItemCommand, int>
 {
@@ -38,11 +33,8 @@ public class CreateWorkItemCommandHandler : IRequestHandler<CreateWorkItemComman
 
     public async Task<int> Handle(CreateWorkItemCommand command, CancellationToken cancellationToken)
     {
-        // ===== VALIDACIÓN DE CONGELAMIENTO PARA TAREAS =====
-        // Obtener el estado del espacio desde la fachada ACL
         var spaceStatus = await _propertyFacade.GetSpaceStatusAsync(command.SpaceId);
         
-        // REGLA ESTRICTA: Si el estado NO es "Published" ni "Accepted", no se pueden crear tareas
         if (string.IsNullOrEmpty(spaceStatus) || 
             (spaceStatus != "Published" && spaceStatus != "Accepted"))
         {
@@ -72,8 +64,7 @@ public class CreateWorkItemCommandHandler : IRequestHandler<CreateWorkItemComman
             var totalPricing = await _workItemRepository.SumPricesBySpaceIdAsync(workItem.SpaceId);
             await _propertyFacade.UpdateSpaceTotalPricingAsync(workItem.SpaceId, totalPricing);
         }
-
-        // Devolver el Id generado
+        
         return workItem.Id;
     }
 }

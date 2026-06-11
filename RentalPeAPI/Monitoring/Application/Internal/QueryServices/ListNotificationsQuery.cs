@@ -1,5 +1,4 @@
-﻿// Monitoring/Application/Internal/QueryServices/ListNotificationsQuery.cs
-using MediatR;
+﻿using MediatR;
 using System.Collections.Generic;
 using RentalPeAPI.Monitoring.Domain.Entities;
 

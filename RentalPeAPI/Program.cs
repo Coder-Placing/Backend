@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -18,13 +17,6 @@ using RentalPeAPI.User.Domain.Repositories;
 using RentalPeAPI.User.Domain.Services;
 using RentalPeAPI.User.Infrastructure.Persistence.EFC.Repositories;
 using RentalPeAPI.User.Infrastructure.Security;
-
-// Payment BC
-using RentalPeAPI.Payments.Domain.Repositories;
-using RentalPeAPI.Payments.Domain.Services.payment;
-using RentalPeAPI.Payments.Application.Internal.CommandServices;
-using RentalPeAPI.Payments.Application.Internal.QueryServices;
-using RentalPeAPI.Payments.Infrastructure.Persistence.EFC.Repositories;
 
 // Property/Space BC
 using RentalPeAPI.Property.Application.Services;
@@ -165,19 +157,14 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommand).Assembly);   // User
-    cfg.RegisterServicesFromAssembly(typeof(PaymentCommandService).Assembly); // Payment
 });
 
 // User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
 builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
 builder.Services.AddSingleton<ITokenGenerationService, TokenGenerationService>();
-builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
 
-// Payment
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-builder.Services.AddScoped<IPaymentCommandService, PaymentCommandService>();
-builder.Services.AddScoped<IPaymentQueryService, PaymentQueryService>();
 
 // Property/Space
 builder.Services.AddScoped<SpaceAppService>();

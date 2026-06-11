@@ -12,7 +12,7 @@ using RentalPeAPI.User.Domain.Services;
 
 using SharedIUnitOfWork = RentalPeAPI.Shared.Domain.Repositories.IUnitOfWork;
 
-namespace RentalPeAPI.User.Application.Internal.CommandServices;
+namespace RentalPeAPI.User.Application.Internal.EventHandlers;
 
 public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, UserDto>
 {
@@ -54,7 +54,7 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, U
         await _unitOfWork.CompleteAsync();
         
         var paymentMethodsDto = user.PaymentMethods
-            .Select(pm => new PaymentMethodDto(pm.Id, pm.Type, pm.Number, pm.Expiry, pm.Cvv))
+            .Select(pm => new PaymentMethodDto(pm.Id, pm.Type, pm.LastFourDigits, pm.Expiry))
             .ToList();
 
         return new UserDto(

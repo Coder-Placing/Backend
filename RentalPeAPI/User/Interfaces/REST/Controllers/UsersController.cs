@@ -69,15 +69,13 @@ public class UsersController : ControllerBase
     /// Solo accesible para usuarios autenticados (ambos roles).
     /// </summary>
     [HttpGet("{userId:guid}")]
-    [Authorize(Roles = "Homeowner,Remodeler")] // ← Protegido ahora
+    [Authorize(Roles = "Homeowner,Remodeler")] 
     public async Task<ActionResult<UserDto>> GetUserById(Guid userId)
     {
-        // Validar que el usuario autenticado espé solicitando su propia información
         var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authenticatedUserId))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
-
-        // Permitir que un usuario solo vea su propia información (o admin en el futuro)
+        
         if (authenticatedUserId != userId)
             return Forbid("No tienes permiso para acceder a la información de otro usuario.");
 
@@ -94,7 +92,7 @@ public class UsersController : ControllerBase
     /// Solo accesible para usuarios autenticados (ambos roles).
     /// </summary>
     [HttpPost("{userId:guid}/payment-methods")]
-    [Authorize(Roles = "Homeowner,Remodeler")] // ← Protegido ahora
+    [Authorize(Roles = "Homeowner,Remodeler")] 
     public async Task<ActionResult<UserDto>> AddPaymentMethod(Guid userId, [FromBody] AddPaymentMethodResource resource)
     {
         // Validar que el usuario autenticado esté añadiendo métodos de pago a su cuenta

@@ -4,9 +4,6 @@ using RentalPeAPI.User.Domain;
 using RentalPeAPI.User.Infrastructure.Persistence.EFC.Configuration; 
 using RentalPeAPI.Property.Domain.Aggregates; 
 using RentalPeAPI.Property.Infrastructure.Persistence.EFC.Configuration; 
-using RentalPeAPI.Payments.Infrastructure.Persistence.EFC.configuration.extensions;
-using EFCore.NamingConventions;
-
 using RentalPeAPI.Monitoring.Domain.Model.Aggregates;
 using RentalPeAPI.Monitoring.Domain.Entities;
 using RentalPeAPI.Monitoring.Infrastructure.Persistence.EFC.Configuration;
@@ -27,12 +24,9 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
 
     // --- DBSETS DEL BOUNDED CONTEXT MONITORING ---
     public DbSet<IoTDevice> IoTDevices { get; set; }
-    public DbSet<Monitoring.Domain.Entities.WorkItem> Tasks { get; set; }
-    public DbSet<Monitoring.Domain.Entities.Notification> Notifications { get; set; }
+    public DbSet<WorkItem> Tasks { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
     
-    // --- DBSETS DEL BOUNDED CONTEXT PAYMENTS ---
-    public DbSet<Payments.Domain.Model.Aggregates.Payment> Payments { get; set; } = default!;
-
     protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
         // Add the created and updated interceptor
@@ -54,13 +48,10 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         builder.ApplyConfiguration(new UserConfiguration()); 
         builder.ApplyConfiguration(new PaymentMethodConfiguration());
         
-        // 2. Payments BC Configuration
-        builder.ApplyPaymentsConfiguration();
-        
-        // 3. Space/Property BC Configuration
+        // 2. Space/Property BC Configuration
         builder.ApplyConfiguration(new SpaceConfiguration());
-        
-        // 4. Monitoring BC Configuration
+
+        // 3. Monitoring BC Configuration
         builder.ApplyConfiguration(new IoTDeviceConfiguration());
         builder.ApplyConfiguration(new WorkItemConfiguration());
         builder.ApplyConfiguration(new NotificationConfiguration());

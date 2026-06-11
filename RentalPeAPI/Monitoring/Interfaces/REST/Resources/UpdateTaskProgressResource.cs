@@ -25,16 +25,21 @@ public class UpdateTaskProgressResource
     [JsonPropertyName("plannedEndDate")]
     public DateTime? PlannedEndDate { get; set; } // Opcional
 
+    [JsonPropertyName("price")]
+    public decimal? Price { get; set; } // Opcional
+
     public UpdateTaskProgressResource() { }
 
     public UpdateTaskProgressResource(
         string? status = null,
         DateTime? plannedStartDate = null,
-        DateTime? plannedEndDate = null)
+        DateTime? plannedEndDate = null,
+        decimal? price = null)
     {
         Status = status;
         PlannedStartDate = plannedStartDate;
         PlannedEndDate = plannedEndDate;
+        Price = price;
     }
 }
 

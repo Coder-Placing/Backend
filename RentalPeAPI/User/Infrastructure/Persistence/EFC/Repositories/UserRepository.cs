@@ -26,7 +26,6 @@ public class UserRepository : IUserRepository
 
     public async Task<Domain.User?> GetByEmailAsync(string email)
     {
-        // Incluimos también los PaymentMethods para que el UserDto pueda devolverlos
         return await _context.Users
             .Include(u => u.PaymentMethods)
             .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
@@ -34,7 +33,6 @@ public class UserRepository : IUserRepository
 
     public async Task<Domain.User?> GetByIdAsync(Guid id)
     {
-        // FindAsync no incluye colecciones de navegación, usamos FirstOrDefaultAsync + Include
         return await _context.Users
             .Include(u => u.PaymentMethods)
             .FirstOrDefaultAsync(u => u.Id == id);

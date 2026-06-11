@@ -249,6 +249,7 @@ public class SpaceAppService
             SpaceType = space.SpaceType.ToString(),
             DimensionsSquareMeters = space.DimensionsSquareMeters,
             EstimatedBudget = space.EstimatedBudget,
+            EndingPricing = space.EndingPricing,
             Currency = space.Currency,
             Status = space.Status.ToString(),
             HasIot = space.HasIot,
