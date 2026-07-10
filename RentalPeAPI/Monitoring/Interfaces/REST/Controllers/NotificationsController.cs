@@ -1,5 +1,4 @@
-﻿// Monitoring/Interfaces/REST/Controllers/NotificationsController.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -23,7 +22,7 @@ namespace RentalPeAPI.Monitoring.Interfaces.REST.Controllers;
 [ApiController]
 [Route("api/v1/monitoring/[controller]")]
 [Tags("Notifications")]
-[Authorize] // ← CRÍTICO: Requiere autenticación JWT
+[Authorize] 
 public class NotificationsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -45,22 +44,16 @@ public class NotificationsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetUserNotifications()
     {
-        // Extrae el ID del usuario del token JWT de forma segura
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier válido." });
-
         try
         {
-            // Ejecutar query para obtener notificaciones del usuario
             var query = new GetNotificationsByUserIdQuery(userId);
             var notifications = await _mediator.Send(query);
-
-            // Validar que hay notificaciones
             if (!notifications.Any())
-                return Ok(new List<NotificationResource>()); // Retornar lista vacía
+                return Ok(new List<NotificationResource>()); 
 
-            // Mapear entidades de dominio a DTOs de presentación
             var resources = notifications.Select(n => new NotificationResource(
                 n.Id,
                 n.SpaceId,
@@ -91,14 +84,12 @@ public class NotificationsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> MarkNotificationAsRead(long id)
     {
-        // Extrae el ID del usuario del token JWT de forma segura
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier válido." });
 
         try
         {
-            // Despachar comando para marcar como leída
             var command = new MarkNotificationAsReadCommand(id, userId);
             await _mediator.Send(command);
 

@@ -1,5 +1,4 @@
-﻿// Monitoring/Application/Internal/EventHandlers/CreateWorkItemCommandHandler.cs
-using MediatR;
+﻿using MediatR;
 using RentalPeAPI.Monitoring.Domain.Entities;
 using RentalPeAPI.Monitoring.Domain.Repositories;
 using RentalPeAPI.Monitoring.Application.Internal.CommandServices;
@@ -41,8 +40,6 @@ public class CreateWorkItemCommandHandler : IRequestHandler<CreateWorkItemComman
             throw new InvalidOperationException(
                 "No se pueden modificar tareas: El espacio está completado o cancelado.");
         }
-
-        // Crear el WorkItem a partir del comando
         var workItem = new WorkItem(
             command.SpaceId,
             command.CreatedByUserId,
@@ -53,12 +50,10 @@ public class CreateWorkItemCommandHandler : IRequestHandler<CreateWorkItemComman
             command.PlannedEndDate,
             price: command.Price
         );
-
-        // Guardar en la BD
+        
         await _workItemRepository.AddAsync(workItem);
         await _unitOfWork.CompleteAsync();
-
-        // Si la tarea tiene precio, actualizar el costo total en Property Context
+        
         if (command.Price > 0)
         {
             var totalPricing = await _workItemRepository.SumPricesBySpaceIdAsync(workItem.SpaceId);

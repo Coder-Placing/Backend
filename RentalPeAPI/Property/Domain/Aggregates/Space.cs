@@ -9,11 +9,8 @@ namespace RentalPeAPI.Property.Domain.Aggregates;
 public class Space
 {
     public long Id { get; private set; }
-    
-    // Propietario que publica
     public Guid HomeownerId { get; private set; }
     
-    // Remodeler que acepta la oferta (nullable hasta que se acepte)
     public Guid? RemodelerId { get; private set; }
     
     public string Title { get; private set; } = string.Empty;
@@ -28,7 +25,6 @@ public class Space
     public SpaceStatus Status { get; private set; } = SpaceStatus.Published;
     public bool HasIot { get; private set; }
     
-    // Imágenes como URLs (colección de strings)
     public List<string> Images { get; private set; } = new();
     
     public DateTimeOffset PublishedAt { get; private set; }

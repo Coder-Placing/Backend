@@ -1,4 +1,3 @@
-// Property/Application/Internal/EventHandlers/UpdateSpaceTotalPricingCommandHandler.cs
 using System;
 using System.Threading;
 using System.Threading.Tasks;

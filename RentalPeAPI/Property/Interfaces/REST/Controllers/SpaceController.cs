@@ -11,7 +11,7 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    [Authorize] // Requiere JWT en todos los endpoints
+    [Authorize] 
     public class SpaceController : ControllerBase
     {
         private readonly SpaceAppService _spaceAppService;
@@ -25,7 +25,6 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Controllers
         [Authorize(Roles = "Homeowner,Remodeler")]
         public async Task<ActionResult<IEnumerable<SpaceResource>>> GetAllSpaces()
         {
-            // Endpoint público autenticado para catálogo: lista solo espacios publicados.
             var query = new ListSpacesQuery(null, "Published");
             var spaces = await _spaceAppService.ListSpacesAsync(query);
             var resources = spaces.Select(SpaceResourceAssembler.ToResource);
@@ -47,7 +46,6 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Controllers
         [ProducesResponseType(401)]
         public async Task<ActionResult<IEnumerable<SpaceResource>>> GetMySpaces()
         {
-            // Extraer el ID del usuario desde el token JWT
             var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
                 return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
@@ -118,7 +116,7 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Controllers
         /// <response code="403">Usuario no tiene rol "Remodeler"</response>
         /// <response code="404">Espacio no encontrado</response>
         [HttpPost("{id}/accept")]
-        [Authorize(Roles = "Remodeler")] // Solo Remodelers pueden aceptar proyectos
+        [Authorize(Roles = "Remodeler")] 
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
@@ -126,12 +124,10 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> AcceptProject(long id)
         {
-            // Extraer el ID del Remodeler desde el token JWT usando ClaimTypes.NameIdentifier
             var remodelIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(remodelIdClaim) || !Guid.TryParse(remodelIdClaim, out var remodelerId))
                 return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
-
-            // Validar que el rol sea exactamente "Remodeler"
+            
             var roleClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.Role);
             if (string.IsNullOrEmpty(roleClaim) || !roleClaim.Equals("Remodeler", StringComparison.OrdinalIgnoreCase))
                 return Forbid();
@@ -188,7 +184,6 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> CompleteProject(long id)
         {
-            // Extraer el ID del Homeowner desde el token JWT usando ClaimTypes.NameIdentifier
             var homeownIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(homeownIdClaim) || !Guid.TryParse(homeownIdClaim, out var homeownerId))
                 return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
@@ -245,7 +240,6 @@ namespace RentalPeAPI.Property.Interfaces.Rest.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> CancelProject(long id)
         {
-            // Extraer el ID del Homeowner desde el token JWT usando ClaimTypes.NameIdentifier
             var homeownIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(homeownIdClaim) || !Guid.TryParse(homeownIdClaim, out var homeownerId))
                 return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });

@@ -1,5 +1,4 @@
-﻿// Monitoring/Interfaces/REST/Controllers/WorkItemController.cs
-using System;
+﻿using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using MediatR;
@@ -29,7 +28,7 @@ namespace RentalPeAPI.Monitoring.Interfaces.REST.Controllers;
 [ApiController]
 [Route("api/v1/monitoring/tasks")] // -> /api/v1/monitoring/tasks
 [Tags("Tasks")]
-[Authorize] // Requiere JWT válido en todos los endpoints (excepto datos públicos)
+[Authorize]
 public class WorkItemController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -97,15 +96,12 @@ public class WorkItemController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-
-        // Extraer el ID del usuario desde el token JWT
         var createdByUserId = ExtractUserIdFromToken();
         if (createdByUserId == Guid.Empty)
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
 
         try
         {
-            // Crear comando con FUERZA Status="PENDING" y fechas=null
             var command = new CreateWorkItemCommand(
                 resource.SpaceId,
                 createdByUserId,
@@ -114,12 +110,12 @@ public class WorkItemController : ControllerBase
                 resource.PhotoUrl,
                 null,
                 null,
-                0m // Price es siempre 0 para solicitudes de Homeowner
+                0m 
             );
 
             var taskId = await _mediator.Send(command);
 
-            // Recuperar la entidad completa creada
+
             var createdWorkItem = await _workItemRepository.FindByIdAsync(taskId);
             if (createdWorkItem == null)
                 throw new KeyNotFoundException($"WorkItem recién creado con ID {taskId} no encontrado.");
@@ -182,8 +178,7 @@ public class WorkItemController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-
-        // Extraer el ID del usuario desde el token JWT
+        
         var createdByUserId = ExtractUserIdFromToken();
         if (createdByUserId == Guid.Empty)
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
@@ -196,8 +191,7 @@ public class WorkItemController : ControllerBase
 
             if (space.RemodelerId != createdByUserId)
                 return Forbid();
-
-            // Crear comando permitiendo Status y fechas del payload
+            
             var command = new CreateWorkItemCommand(
                 resource.SpaceId,
                 createdByUserId,
@@ -211,7 +205,6 @@ public class WorkItemController : ControllerBase
 
             var taskId = await _mediator.Send(command);
 
-            // Recuperar la entidad completa creada
             var createdWorkItem = await _workItemRepository.FindByIdAsync(taskId);
             if (createdWorkItem == null)
                 throw new KeyNotFoundException($"WorkItem recién creado con ID {taskId} no encontrado.");
@@ -318,7 +311,6 @@ public class WorkItemController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> GetMyTasks()
     {
-        // Extraer el ID del usuario desde el token JWT
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
@@ -366,24 +358,19 @@ public class WorkItemController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-
-        // Extraer el ID del usuario desde el token JWT
+        
         var requestingUserId = ExtractUserIdFromToken();
         if (requestingUserId == Guid.Empty)
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
 
         try
         {
-            // Obtener la tarea
             var workItem = await _workItemRepository.FindByIdAsync(id);
             if (workItem == null)
                 return NotFound(new { error = $"WorkItem con ID {id} no encontrado." });
-
-            // Validar que el usuario sea el CREADOR EXACTO
+            
             if (workItem.CreatedByUserId != requestingUserId)
                 return Forbid();
-
-            // Aplicar cambios solo a contenido descriptivo
             if (!string.IsNullOrWhiteSpace(resource.Title) ||
                 !string.IsNullOrWhiteSpace(resource.Description) ||
                 resource.PhotoUrl != null)
@@ -395,8 +382,7 @@ public class WorkItemController : ControllerBase
                 workItem.EditContent(finalTitle, finalDescription, finalPhotoUrl);
                 await _unitOfWork.CompleteAsync();
             }
-
-             // Transformar la entidad actualizada a WorkItemResource
+            
              var workItemResource = new WorkItemResource(
                  workItem.Id,
                  workItem.SpaceId,
@@ -455,29 +441,23 @@ public class WorkItemController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-
-        // Extraer el ID del usuario desde el token JWT
         var requestingUserId = ExtractUserIdFromToken();
         if (requestingUserId == Guid.Empty)
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
 
         try
         {
-            // Obtener la tarea para validaciones
             var workItem = await _workItemRepository.FindByIdAsync(id);
             if (workItem == null)
                 return NotFound(new { error = $"WorkItem con ID {id} no encontrado." });
-
-            // Obtener el espacio para validar que el usuario sea el RemodelerId
+            
             var space = await _spaceRepository.FindByIdAsync(workItem.SpaceId);
             if (space == null)
                 return NotFound(new { error = $"Space con ID {workItem.SpaceId} no encontrado." });
-
-            // Validar que el usuario sea el Remodeler EXACTO asignado al Space
+            
             if (space.RemodelerId != requestingUserId)
                 return Forbid();
             
-            // Esto asegura que se ejecute el handler completo y se disparen notificaciones
             var finalStatus = !string.IsNullOrWhiteSpace(resource.Status) ? resource.Status : workItem.Status;
             
             var command = new UpdateWorkItemStatusCommand(id, finalStatus, requestingUserId, resource.Price);
@@ -485,8 +465,7 @@ public class WorkItemController : ControllerBase
 
             if (updatedWorkItem == null)
                 return NotFound(new { error = $"No se pudo actualizar la tarea {id}." });
-
-            // Aplicar cambios de fechas si se proporcionan (después de validación en el agregado)
+            
             if (resource.PlannedStartDate.HasValue || resource.PlannedEndDate.HasValue)
             {
                 DateTime? finalStartDate = resource.PlannedStartDate ?? updatedWorkItem.PlannedStartDate;
@@ -495,8 +474,7 @@ public class WorkItemController : ControllerBase
                 updatedWorkItem.UpdateProgress(updatedWorkItem.Status, finalStartDate, finalEndDate);
                 await _unitOfWork.CompleteAsync();
             }
-
-             // Transformar la entidad actualizada a WorkItemResource
+            
              var workItemResource = new WorkItemResource(
                  updatedWorkItem.Id,
                  updatedWorkItem.SpaceId,
@@ -531,23 +509,19 @@ public class WorkItemController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteWorkItem(int id)
     {
-        // Extraer el ID del usuario desde el token JWT
         var requestingUserId = ExtractUserIdFromToken();
         if (requestingUserId == Guid.Empty)
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
 
         try
         {
-            // Obtener la tarea
             var workItem = await _workItemRepository.FindByIdAsync(id);
             if (workItem == null)
                 return NotFound(new { error = $"WorkItem con ID {id} no encontrado." });
-
-            // Validar que solo el creador exacto pueda eliminar
+            
             if (workItem.CreatedByUserId != requestingUserId)
                 return Forbid();
-
-            // Eliminar la tarea
+            
             await _workItemRepository.DeleteAsync(id);
             await _unitOfWork.CompleteAsync();
 

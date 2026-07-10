@@ -1,5 +1,4 @@
-﻿// Monitoring/Interfaces/REST/Resources/CreateTaskRequestResource.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace RentalPeAPI.Monitoring.Interfaces.REST.Resources;
@@ -31,7 +30,7 @@ public class CreateTaskRequestResource
 
     [StringLength(2048, ErrorMessage = "PhotoUrl no puede exceder 2048 caracteres")]
     [JsonPropertyName("photoUrl")]
-    public string? PhotoUrl { get; set; } // Opcional
+    public string? PhotoUrl { get; set; } 
 
     public CreateTaskRequestResource() { }
 

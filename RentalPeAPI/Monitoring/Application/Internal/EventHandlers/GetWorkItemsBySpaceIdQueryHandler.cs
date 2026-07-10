@@ -1,4 +1,3 @@
-// Monitoring/Application/Internal/EventHandlers/GetWorkItemsBySpaceIdQueryHandler.cs
 using MediatR;
 using RentalPeAPI.Monitoring.Application.Internal.QueryServices;
 using RentalPeAPI.Monitoring.Domain.Repositories;
@@ -21,10 +20,7 @@ public class GetWorkItemsBySpaceIdQueryHandler : IRequestHandler<GetWorkItemsByS
 
     public async Task<IEnumerable<WorkItemResource>> Handle(GetWorkItemsBySpaceIdQuery query, CancellationToken cancellationToken)
     {
-        // Obtener todas las tareas del espacio
         var workItems = await _workItemRepository.ListBySpaceIdAsync(query.SpaceId);
-
-        // Mapear entidades a DTOs
         return workItems.Select(wi => new WorkItemResource(
             wi.Id,
             wi.SpaceId,

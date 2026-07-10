@@ -24,7 +24,7 @@ public class UsersController : ControllerBase
     /// Endpoint público - No requiere autenticación.
     /// </summary>
     [HttpPost("register")]
-    [AllowAnonymous] // ← Explícitamente permitido sin autenticación
+    [AllowAnonymous] 
     public async Task<ActionResult<UserDto>> RegisterUser([FromBody] RegisterUserResource resource)
     {
         var command = new RegisterUserCommand(
@@ -35,10 +35,7 @@ public class UsersController : ControllerBase
             resource.Role,
             resource.Photo
         );
-
         var userDto = await _mediator.Send(command);
-
-        // Ahora Swagger sabe que la respuesta es UserDto
         return CreatedAtAction(nameof(GetUserById), new { userId = userDto.Id }, userDto);
     }
 
@@ -48,7 +45,7 @@ public class UsersController : ControllerBase
     /// Retorna token JWT si las credenciales son válidas.
     /// </summary>
     [HttpPost("login")]
-    [AllowAnonymous] // ← Explícitamente permitido sin autenticación
+    [AllowAnonymous] 
     public async Task<IActionResult> Login([FromBody] LoginResource resource)
     {
         try
@@ -95,12 +92,10 @@ public class UsersController : ControllerBase
     [Authorize(Roles = "Homeowner,Remodeler")] 
     public async Task<ActionResult<UserDto>> AddPaymentMethod(Guid userId, [FromBody] AddPaymentMethodResource resource)
     {
-        // Validar que el usuario autenticado esté añadiendo métodos de pago a su cuenta
         var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authenticatedUserId))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
-
-        // Permitir que un usuario solo añada métodos a su propia cuenta
+        
         if (authenticatedUserId != userId)
             return Forbid("No tienes permiso para modificar la información de otro usuario.");
 

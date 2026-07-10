@@ -17,16 +17,16 @@ public class UpdateTaskProgressResource
 {
     [StringLength(50, MinimumLength = 1, ErrorMessage = "Status debe tener entre 1 y 50 caracteres")]
     [JsonPropertyName("status")]
-    public string? Status { get; set; } // Opcional
+    public string? Status { get; set; } 
 
     [JsonPropertyName("plannedStartDate")]
-    public DateTime? PlannedStartDate { get; set; } // Opcional
+    public DateTime? PlannedStartDate { get; set; } 
 
     [JsonPropertyName("plannedEndDate")]
-    public DateTime? PlannedEndDate { get; set; } // Opcional
+    public DateTime? PlannedEndDate { get; set; } 
 
     [JsonPropertyName("price")]
-    public decimal? Price { get; set; } // Opcional
+    public decimal? Price { get; set; } 
 
     public UpdateTaskProgressResource() { }
 

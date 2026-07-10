@@ -1,5 +1,4 @@
-﻿// Monitoring/Interfaces/REST/Resources/UpdateWorkItemStatusResource.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace RentalPeAPI.Monitoring.Interfaces.REST.Resources;

@@ -1,5 +1,4 @@
-﻿// Monitoring/Application/Internal/QueryServices/ListNotificationsQueryHandler.cs
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;

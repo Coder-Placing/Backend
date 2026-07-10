@@ -1,5 +1,4 @@
-﻿// Monitoring/Application/Internal/EventHandlers/GetWorkItemByIdQueryHandler.cs
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using RentalPeAPI.Monitoring.Application.Internal.QueryServices;
@@ -27,8 +26,7 @@ public class GetWorkItemByIdQueryHandler : IRequestHandler<GetWorkItemByIdQuery,
 
         if (workItem == null)
             return null;
-
-        // Mapear la entidad a DTO
+        
         return new WorkItemResource(
             workItem.Id,
             workItem.SpaceId,

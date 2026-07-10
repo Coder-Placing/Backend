@@ -11,12 +11,11 @@ public class SpaceConfiguration : IEntityTypeConfiguration<Space>
     {
         builder.ToTable("spaces");
 
-        // Clave Principal
+
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id)
             .ValueGeneratedOnAdd();
-
-        // Propiedades escalares
+        
         builder.Property(s => s.HomeownerId)
             .IsRequired();
 
@@ -69,8 +68,6 @@ public class SpaceConfiguration : IEntityTypeConfiguration<Space>
         builder.Property(s => s.HasIot)
             .IsRequired()
             .HasDefaultValue(false);
-
-        // Imágenes como JSON collection
         builder.Property(s => s.Images)
             .HasConversion(
                 v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null),
@@ -83,8 +80,7 @@ public class SpaceConfiguration : IEntityTypeConfiguration<Space>
 
         builder.Property(s => s.AcceptedAt)
             .IsRequired(false);
-
-        // Índices para optimizar consultas
+        
         builder.HasIndex(s => s.HomeownerId);
         builder.HasIndex(s => s.RemodelerId);
         builder.HasIndex(s => s.Status);

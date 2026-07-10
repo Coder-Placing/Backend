@@ -32,15 +32,11 @@ public class CompleteSpaceCommandHandler
     /// </summary>
     public async Task<bool> HandleAsync(CompleteSpaceCommand request)
     {
-        // Obtener el espacio
+
         var space = await _spaceRepository.FindByIdAsync(request.SpaceId);
         if (space == null)
             return false;
-
-        // Ejecutar la lógica de dominio de completación
         space.CompleteProject(request.RequestingUserId);
-        
-        // Persistir cambios en Property
         await _unitOfWork.CompleteAsync();
         
         await _monitoringFacade.DispatchNotificationAsync(

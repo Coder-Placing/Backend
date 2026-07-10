@@ -12,26 +12,17 @@ namespace RentalPeAPI.Monitoring.Domain.Entities;
 /// </summary>
 public class WorkItem
 {
-    // PK - Autogenerado
     public int Id { get; set; }
-
-    // FK - Referencia al espacio (Space)
     public long SpaceId { get; set; }
-    
-    // FK - Usuario que subió la tarea (dueño o remodelador)
     public Guid CreatedByUserId { get; set; }
-
-    // Propiedades del WorkItem
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public string? PhotoUrl { get; set; } // Opcional
-    public DateTime? PlannedStartDate { get; set; } // Opcional
-    public DateTime? PlannedEndDate { get; set; } // Opcional
-
-    // Precio de la tarea (cotización del remodelador)
+    public string? PhotoUrl { get; set; } 
+    public DateTime? PlannedStartDate { get; set; } 
+    public DateTime? PlannedEndDate { get; set; } 
+    
     public decimal Price { get; private set; } = 0m;
     
-    // Estado y auditoría
     public string Status { get; set; } = "PENDING";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? CompletedAt { get; private set; }
@@ -63,7 +54,6 @@ public class WorkItem
         if (price < 0)
             throw new ArgumentException("Price cannot be negative.", nameof(price));
         
-        // Validar que si se proporciona una fecha, la otra también debe estar presente y válida
         if (plannedStartDate.HasValue && plannedEndDate.HasValue)
         {
             if (plannedStartDate >= plannedEndDate)
@@ -100,7 +90,7 @@ public class WorkItem
 
         SpaceId = spaceId;
         CreatedByUserId = createdByUserId;
-        Title = "Sin título"; // Valor por defecto
+        Title = "Sin título"; 
         Description = description;
         PhotoUrl = null;
         PlannedStartDate = null;
@@ -149,7 +139,6 @@ public class WorkItem
         if (string.IsNullOrWhiteSpace(status))
             throw new ArgumentException("Status cannot be empty.", nameof(status));
 
-        // Validar que si se proporciona una fecha, la otra también debe estar presente y válida
         if (startDate.HasValue && endDate.HasValue)
         {
             if (startDate >= endDate)

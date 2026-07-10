@@ -10,7 +10,6 @@ namespace RentalPeAPI.Property.Infrastructure.Persistence
         {
            
         }
-
         public DbSet<Space> Spaces { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

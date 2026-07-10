@@ -83,7 +83,6 @@ public class SpaceAppService
         space.AcceptProject(command.RemodelerId);
         await _unitOfWork.CompleteAsync();
         
-        // El propietario es notificado que su solicitud ha sido aceptada
         var notificationCommandHomeowner = new CreateNotificationCommand(
             space.HomeownerId,
             space.Id,
@@ -92,7 +91,6 @@ public class SpaceAppService
         );
         await _mediator.Send(notificationCommandHomeowner);
         
-        // El remodelador es notificado que ha sido asignado a este proyecto
         if (space.RemodelerId.HasValue)
         {
             await _monitoringFacade.DispatchNotificationAsync(
@@ -135,14 +133,11 @@ public class SpaceAppService
     public async Task<IEnumerable<SpaceDto>> ListSpacesAsync(ListSpacesQuery query)
     {
         var spaces = await _spaceRepository.ListAsync();
-        
-        // Filtrar por OwnerId si se proporciona
         if (query.OwnerId.HasValue)
         {
             spaces = spaces.Where(s => s.HomeownerId == query.OwnerId.Value).ToList();
         }
         
-        // Filtrar por Status si se proporciona
         if (!string.IsNullOrEmpty(query.Status))
         {
             if (Enum.TryParse<SpaceStatus>(query.Status, true, out var statusEnum))
@@ -161,8 +156,6 @@ public class SpaceAppService
     public async Task<IEnumerable<SpaceDto>> GetSpacesByUserIdAsync(GetSpacesByUserIdQuery query)
     {
         var spaces = await _spaceRepository.ListAsync();
-        
-        // Filtrar espacios donde el usuario es owner o remodeler
         var userSpaces = spaces.Where(s => 
             s.HomeownerId == query.UserId || s.RemodelerId == query.UserId
         ).ToList();
@@ -178,7 +171,6 @@ public class SpaceAppService
         space.CompleteProject(command.RequestingUserId);
         await _unitOfWork.CompleteAsync();
         
-        // El propietario confirma que la obra ha sido completada exitosamente
         await _monitoringFacade.DispatchNotificationAsync(
             space.HomeownerId,
             space.Id,
@@ -186,7 +178,6 @@ public class SpaceAppService
             "Has marcado la obra como finalizada con éxito."
         );
         
-        // Si existe un remodelador asignado, notificarle que el proyecto fue completado
         if (space.RemodelerId.HasValue)
         {
             await _monitoringFacade.DispatchNotificationAsync(
@@ -204,14 +195,11 @@ public class SpaceAppService
     {
         var space = await _spaceRepository.FindByIdAsync(command.SpaceId);
         if (space == null) return null;
-
-        // Guardar el RemodelerId antes de ejecutar la cancelación (por si se limpia en la lógica de dominio)
         var remodelerId = space.RemodelerId;
 
         space.CancelProject(command.RequestingUserId);
         await _unitOfWork.CompleteAsync();
         
-        // El propietario cancela exitosamente la solicitud y se desactivan los sensores
         await _monitoringFacade.DispatchNotificationAsync(
             space.HomeownerId,
             space.Id,
@@ -219,7 +207,6 @@ public class SpaceAppService
             "Has cancelado exitosamente la solicitud para este espacio. Los sensores han sido desactivados."
         );
         
-        // Si había un remodelador asignado, notificarle que el proyecto fue cancelado
         if (remodelerId.HasValue)
         {
             await _monitoringFacade.DispatchNotificationAsync(
@@ -230,7 +217,6 @@ public class SpaceAppService
             );
         }
         
-        // Esto optimiza recursos al desactivar sensores cuando el proyecto ya no está activo
         await _monitoringFacade.DisableAllDevicesForSpaceAsync(command.SpaceId);
 
         return ToDto(space);

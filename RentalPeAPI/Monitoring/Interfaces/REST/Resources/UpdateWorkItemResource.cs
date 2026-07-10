@@ -1,5 +1,4 @@
-﻿// Monitoring/Interfaces/REST/Resources/UpdateWorkItemResource.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace RentalPeAPI.Monitoring.Interfaces.REST.Resources;
@@ -23,25 +22,25 @@ public class UpdateWorkItemResource
 {
     [StringLength(200, ErrorMessage = "Title no puede exceder 200 caracteres")]
     [JsonPropertyName("title")]
-    public string? Title { get; set; } // Opcional
+    public string? Title { get; set; } 
 
     [StringLength(500, ErrorMessage = "Description no puede exceder 500 caracteres")]
     [JsonPropertyName("description")]
-    public string? Description { get; set; } // Opcional
+    public string? Description { get; set; } 
 
     [StringLength(2048, ErrorMessage = "PhotoUrl no puede exceder 2048 caracteres")]
     [JsonPropertyName("photoUrl")]
-    public string? PhotoUrl { get; set; } // Opcional
+    public string? PhotoUrl { get; set; } 
 
     [StringLength(50, ErrorMessage = "Status no puede exceder 50 caracteres")]
     [JsonPropertyName("status")]
-    public string? Status { get; set; } // Opcional
+    public string? Status { get; set; } 
 
     [JsonPropertyName("plannedStartDate")]
-    public DateTime? PlannedStartDate { get; set; } // Opcional
+    public DateTime? PlannedStartDate { get; set; } 
 
     [JsonPropertyName("plannedEndDate")]
-    public DateTime? PlannedEndDate { get; set; } // Opcional
+    public DateTime? PlannedEndDate { get; set; } 
 
     public UpdateWorkItemResource() { }
 

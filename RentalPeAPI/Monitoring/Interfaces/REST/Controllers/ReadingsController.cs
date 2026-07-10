@@ -24,7 +24,7 @@ namespace RentalPeAPI.Monitoring.Interfaces.REST.Controllers;
 [ApiController]
 [Route("api/v1/monitoring/[controller]")]
 [Tags("Readings")]
-[Authorize] // ← CRÍTICO: Requiere autenticación JWT
+[Authorize] 
 public class ReadingsController : ControllerBase
 {
     private readonly IIoTDeviceRepository _deviceRepository;
@@ -76,14 +76,12 @@ public class ReadingsController : ControllerBase
     {
         var (minThreshold, maxThreshold) = device.GetThresholds();
         bool isCurrentlyInAlert = device.Value < minThreshold || device.Value > maxThreshold;
-
-        // Si está en alerta, disparar notificaciones bifurcadas
+        
         if (isCurrentlyInAlert)
         {
             device.UpdateAlertState(true);
             await _unitOfWork.CompleteAsync();
-
-            // Obtener los usuarios del espacio desde la fachada
+            
             var spaceUsers = await _propertyFacade.GetSpaceUsersAsync(device.SpaceId);
             
             if (spaceUsers.HasValue)

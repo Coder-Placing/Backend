@@ -10,28 +10,21 @@ namespace RentalPeAPI.Monitoring.Domain.Entities;
 /// </summary>
 public class Notification
 {
-    // PK con encapsulamiento strict
+
     public long Id { get; private set; }
-
-    // Identificador del usuario destinatario final de la alerta (Guid from User BC)
+    
     public Guid UserId { get; private set; }
-
-    // Referencia a la obra/espacio asociado (Space)
+    
     public long SpaceId { get; private set; }
-
-    // Título descriptivo de la alerta 
+    
     public string Title { get; private set; } = string.Empty;
-
-    // Mensaje detallado de la alerta
+    
     public string Message { get; private set; } = string.Empty;
-
-    // Estado de lectura de la notificación
+    
     public bool IsRead { get; private set; }
-
-    // Fecha UTC de creación de la alerta
+    
     public DateTime CreatedAt { get; private set; }
-
-    // Constructor privado para EF Core
+    
     private Notification() { }
 
     /// <summary>

@@ -41,7 +41,6 @@ public class User
         if (string.IsNullOrWhiteSpace(expiry))
             throw new ArgumentException("Expiry is required.", nameof(expiry));
 
-        // Extraer solo los últimos 4 dígitos
         string lastFour = number.Length >= 4 ? number.Substring(number.Length - 4) : number;
         var paymentMethod = new PaymentMethod(id, this.Id, type, lastFour, expiry);
         PaymentMethods.Add(paymentMethod);

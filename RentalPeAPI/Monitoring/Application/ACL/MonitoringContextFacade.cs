@@ -37,7 +37,6 @@ public class MonitoringContextFacade : IMonitoringContextFacade
         string serialNumber,
         string type)
     {
-        // System ID para registros automáticos del ACL
         var systemUserId = Guid.Parse("00000000-0000-0000-0000-000000000000");
 
         var command = new CreateIoTDeviceCommand(
@@ -51,10 +50,7 @@ public class MonitoringContextFacade : IMonitoringContextFacade
             CustomMinThreshold: null,
             CustomMaxThreshold: null
         );
-
         var device = await _mediator.Send(command);
-
-        // El Id del device es long, devolvemos como int
         return (int)device.Id;
     }
 

@@ -1,5 +1,4 @@
-﻿// Monitoring/Interfaces/REST/Resources/WorkItemResource.cs
-using System;
+﻿using System;
 using System.Text.Json.Serialization;
 
 namespace RentalPeAPI.Monitoring.Interfaces.REST.Resources;

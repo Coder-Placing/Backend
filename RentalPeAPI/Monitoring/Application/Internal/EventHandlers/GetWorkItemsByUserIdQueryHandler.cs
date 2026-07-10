@@ -1,4 +1,3 @@
-// Monitoring/Application/Internal/EventHandlers/GetWorkItemsByUserIdQueryHandler.cs
 using System.Collections.Generic;
 using System.Linq;
 using MediatR;
@@ -29,20 +28,13 @@ public class GetWorkItemsByUserIdQueryHandler : IRequestHandler<GetWorkItemsByUs
 
     public async Task<IEnumerable<WorkItemResource>> Handle(GetWorkItemsByUserIdQuery query, CancellationToken cancellationToken)
     {
-        // Obtener los IDs de espacios donde el usuario es propietario o remodelador
         var spaceIds = (await _propertyContextFacade.GetSpaceIdsByUserIdAsync(query.UserId)).ToList();
-
         if (!spaceIds.Any())
             return new List<WorkItemResource>();
-
-        // Obtener todas las tareas de los espacios del usuario
         var userWorkItems = new List<WorkItemResource>();
-
         foreach (var spaceId in spaceIds)
         {
             var workItems = await _workItemRepository.ListBySpaceIdAsync(spaceId);
-            
-            // Mapear entidades a DTOs
             var resources = workItems.Select(wi => new WorkItemResource(
                 wi.Id,
                 wi.SpaceId,

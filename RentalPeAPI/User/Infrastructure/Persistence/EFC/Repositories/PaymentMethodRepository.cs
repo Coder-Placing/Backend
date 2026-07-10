@@ -1,5 +1,4 @@
-﻿// RentalPeAPI/User/Infrastructure/Persistence/EFC/Repositories/PaymentMethodRepository.cs
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RentalPeAPI.Shared.Infrastructure.Persistence.EFC.Configuration;
 using RentalPeAPI.User.Domain;

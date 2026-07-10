@@ -18,7 +18,6 @@ public class TokenGenerationService : ITokenGenerationService
 
     public string GenerateToken(Domain.User user)
     {
-        // Validación para garantizar que el rol sea exactamente "Homeowner" o "Remodeler"
         var validRoles = new[] { "Homeowner", "Remodeler" };
         if (!validRoles.Contains(user.Role, StringComparer.OrdinalIgnoreCase))
         {
@@ -28,14 +27,13 @@ public class TokenGenerationService : ITokenGenerationService
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        // Claims estándar con el rol usando ClaimTypes.Role (constante nativa)
+        
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.Name, user.FullName),
-            new Claim(ClaimTypes.Role, user.Role), // ← USO EXCLUSIVO DE ClaimTypes.Role
+            new Claim(ClaimTypes.Role, user.Role), 
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

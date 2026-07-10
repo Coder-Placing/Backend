@@ -1,5 +1,4 @@
-﻿// Monitoring/Application/Internal/CommandServices/UpdateWorkItemStatusCommand.cs
-using MediatR;
+﻿using MediatR;
 using System;
 
 namespace RentalPeAPI.Monitoring.Application.Internal.CommandServices;

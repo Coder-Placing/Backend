@@ -3,7 +3,6 @@
 public record Image
 {
     public string Url { get; }
-
     public Image(string url)
     {
         if (string.IsNullOrWhiteSpace(url))

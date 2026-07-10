@@ -17,7 +17,7 @@ namespace RentalPeAPI.Monitoring.Interfaces.REST.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/monitoring/[controller]")]
-[Authorize] // ← CRÍTICO: Requiere autenticación JWT en TODOS los endpoints
+[Authorize] 
 public class IoTDevicesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -40,7 +40,6 @@ public class IoTDevicesController : ControllerBase
     [ProducesResponseType(403)]
     public async Task<IActionResult> CreateDevice([FromBody] CreateIoTDeviceResource resource)
     {
-        // Validar que el usuario autenticado tenga un NameIdentifier válido
         var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var createdByUserId))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
@@ -97,7 +96,6 @@ public class IoTDevicesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> ListDevicesBySpace(long spaceId)
     {
-        // Validar que el usuario autenticado tenga un NameIdentifier válido
         var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
@@ -136,19 +134,16 @@ public class IoTDevicesController : ControllerBase
 
         try
         {
-            // Buscar el dispositivo para validar permisos
+
             var device = await _mediator.Send(new GetIoTDeviceByIdQuery(deviceId));
             if (device == null)
                 return NotFound(new { error = $"Dispositivo con ID {deviceId} no encontrado." });
-
-            // Validar que el usuario sea el creador
+            
             if (!Guid.TryParse(userIdClaim, out var userId) || device.CreatedByUserId != userId)
                 return Forbid();
-
-            // Actualizar el dispositivo
+            
             device.UpdateDetails(resource.Name, resource.SerialNumber ?? string.Empty);
-
-            // Crear un comando para persistir cambios
+            
             var updateCommand = new UpdateIoTDeviceCommand(deviceId, resource.Name, resource.SerialNumber);
             await _mediator.Send(updateCommand);
 
@@ -224,7 +219,6 @@ public class IoTDevicesController : ControllerBase
     [ProducesResponseType(401)]
     public async Task<IActionResult> GetMyDevices()
     {
-        // Validar que el usuario autenticado tenga un NameIdentifier válido
         var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });
@@ -256,7 +250,6 @@ public class IoTDevicesController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteDevice(long id)
     {
-        // Validar que el usuario autenticado tenga un NameIdentifier válido
         var userIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var requestingUserId))
             return Unauthorized(new { error = "Token JWT inválido o sin NameIdentifier." });

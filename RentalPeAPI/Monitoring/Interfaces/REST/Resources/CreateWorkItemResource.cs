@@ -1,5 +1,4 @@
-﻿// Monitoring/Interfaces/REST/Resources/CreateWorkItemResource.cs
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -34,13 +33,13 @@ public class CreateWorkItemResource
 
     [StringLength(2048, ErrorMessage = "PhotoUrl no puede exceder 2048 caracteres")]
     [JsonPropertyName("photoUrl")]
-    public string? PhotoUrl { get; set; } // Opcional
+    public string? PhotoUrl { get; set; } 
 
     [JsonPropertyName("plannedStartDate")]
-    public DateTime? PlannedStartDate { get; set; } // Opcional - ignorado si Homeowner
+    public DateTime? PlannedStartDate { get; set; } 
 
     [JsonPropertyName("plannedEndDate")]
-    public DateTime? PlannedEndDate { get; set; } // Opcional - ignorado si Homeowner
+    public DateTime? PlannedEndDate { get; set; } 
 
     public CreateWorkItemResource() { }
 

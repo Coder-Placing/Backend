@@ -1,5 +1,4 @@
-﻿// Monitoring/Interfaces/REST/Resources/UpdateTaskContentResource.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace RentalPeAPI.Monitoring.Interfaces.REST.Resources;
@@ -16,15 +15,15 @@ public class UpdateTaskContentResource
 {
     [StringLength(200, MinimumLength = 1, ErrorMessage = "Title debe tener entre 1 y 200 caracteres")]
     [JsonPropertyName("title")]
-    public string? Title { get; set; } // Opcional
+    public string? Title { get; set; } 
 
     [StringLength(500, MinimumLength = 1, ErrorMessage = "Description debe tener entre 1 y 500 caracteres")]
     [JsonPropertyName("description")]
-    public string? Description { get; set; } // Opcional
+    public string? Description { get; set; } 
 
     [StringLength(2048, ErrorMessage = "PhotoUrl no puede exceder 2048 caracteres")]
     [JsonPropertyName("photoUrl")]
-    public string? PhotoUrl { get; set; } // Opcional
+    public string? PhotoUrl { get; set; } 
 
     public UpdateTaskContentResource() { }
 

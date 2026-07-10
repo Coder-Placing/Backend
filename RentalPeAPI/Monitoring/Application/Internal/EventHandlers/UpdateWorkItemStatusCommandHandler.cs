@@ -1,5 +1,4 @@
-﻿// Monitoring/Application/Internal/EventHandlers/UpdateWorkItemStatusCommandHandler.cs
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;

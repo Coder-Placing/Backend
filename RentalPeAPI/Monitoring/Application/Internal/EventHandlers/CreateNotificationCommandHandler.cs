@@ -29,15 +29,12 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
 
     public async Task<long> Handle(CreateNotificationCommand command, CancellationToken cancellationToken)
     {
-        // Crear la notificación a partir del comando con validación de dominio
         var notification = new Notification(
             command.UserId,
             command.SpaceId,
             command.Title,
             command.Message
         );
-
-        // Guardar la notificación en la BD
         await _notificationRepository.AddAsync(notification);
         await _unitOfWork.CompleteAsync();
         
